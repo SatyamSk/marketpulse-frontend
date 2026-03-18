@@ -23,14 +23,14 @@ const App = () => (
       <DashboardProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/"              element={<MorningBrief />}        />
-            <Route path="/sentiment-lab" element={<SentimentLab />}        />
-            <Route path="/sectors"       element={<SectorWatchlist />}      />
-            <Route path="/geopolitical"  element={<GeopoliticalTracker />}  />
-            <Route path="/ask-ai"        element={<AskAI />}               />
-            <Route path="/about"         element={<AboutProject />}         />
-            <Route path="/admin"         element={<Admin />}               />
-            <Route path="*"             element={<NotFound />}             />
+            <Route path="/"              element={<MorningBrief />}       />
+            <Route path="/sentiment-lab" element={<SentimentLab />}       />
+            <Route path="/sectors"       element={<SectorWatchlist />}    />
+            <Route path="/geopolitical"  element={<GeopoliticalTracker />}/>
+            <Route path="/ask-ai"        element={<AskAI />}              />
+            <Route path="/about"         element={<AboutProject />}       />
+            <Route path="/admin"         element={<Admin />}              />
+            <Route path="*"              element={<NotFound />}           />
           </Routes>
         </BrowserRouter>
       </DashboardProvider>
