@@ -12,15 +12,15 @@ export default defineConfig({
 });
 ```
 
-Click **Commit changes**.
+6. Click **Commit changes** → **Commit changes**
 
-Then click `package.json` → pencil icon → find and delete this line:
-```
-"lovable-tagger": "^1.1.13",
-```
+---
 
-Click **Commit changes**.
+## Fix 3 — Add .npmrc file
 
-Then click **Add file** → **Create new file** → name it `.npmrc` → paste:
+1. Go back to your repo main page
+2. Click **Add file** → **Create new file**
+3. Name it exactly: `.npmrc`
+4. Paste:
 ```
 legacy-peer-deps=true
