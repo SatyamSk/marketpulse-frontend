@@ -117,7 +117,7 @@ export default function MorningBrief() {
           <div>
             <h1 className="text-xl font-semibold text-foreground">Morning Brief</h1>
             <p className="text-xs text-muted-foreground">
-              {new Date().toLocaleDateString("en-IN", {
+              Expected conditions for {new Date().toLocaleDateString("en-IN", {
                 weekday: "long", day: "numeric", month: "long"
               })}
               {lastFetch && (
@@ -170,12 +170,15 @@ export default function MorningBrief() {
           {/* Regime Banner */}
           <div className={`glass-card p-5 border ${regimeBorder}`}>
             <div className="flex items-center gap-2 mb-2">
-              <span className={`text-base font-semibold ${regimeColor}`}>
-                {market_regime.regime}
-              </span>
-              <span className="tag bg-accent text-muted-foreground">
-                Market Regime
-              </span>
+             <span className={`text-base font-semibold ${regimeColor}`}>
+              {market_regime.regime}
+            </span>
+            <span className="tag bg-accent text-muted-foreground">
+              Expected Regime
+            </span>
+            <span className="text-[10px] text-muted-foreground ml-1">
+              · based on {data?.summary_stats?.total_headlines ?? 0} headlines
+            </span>
             </div>
             <p className="text-xs text-secondary-foreground mb-4 leading-relaxed">
               {market_regime.description}
