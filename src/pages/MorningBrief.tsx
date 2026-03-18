@@ -247,7 +247,7 @@ export default function MorningBrief() {
             >
               <Sparkles className="w-4 h-4" />
               {briefLoading ? "Generating..." :
-               brief ? "Regenerate Brief" : "Generate AI Morning Brief"}
+               brief ? "Regenerate Outlook" : "Generate AI Morning Outlook"}
             </button>
             <div className="flex items-center gap-2">
               {[0, 1].map(i => (
@@ -270,7 +270,7 @@ export default function MorningBrief() {
             <div className="glass-card overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-accent/25">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <span className="label-text">AI Morning Brief</span>
+                <span className="label-text">Expected Market Outlook</span>
                 <span className="ml-auto text-[10px] text-muted-foreground">
                   {summary_stats.total_headlines} headlines · Python-scored
                 </span>
