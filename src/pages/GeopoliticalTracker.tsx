@@ -331,7 +331,7 @@ export default function GeopoliticalTracker() {
                     <div className="flex items-center gap-2 shrink-0 mt-0.5">
                       {event.url && (
                         
-                          href={event.url}
+                          <a href={event.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={e => e.stopPropagation()}
