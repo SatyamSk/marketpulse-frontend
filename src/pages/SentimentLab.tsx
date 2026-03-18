@@ -298,7 +298,7 @@ export default function SentimentLab() {
                       { label: "Negative", count: neg, color: "#ef4444" },
                     ].map(({ label, count, color }) => (
                       <div key={label} className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+                        <div className="w-2 h-2 rounded-full" style={{ background: color }}></div>
                         <span className="text-muted-foreground">{label}:</span>
                         <span className="text-foreground font-semibold">{count}</span>
                       </div>
