@@ -3,16 +3,16 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DashboardProvider } from "@/hooks/DashboardContext";
 import MorningBrief from "./pages/MorningBrief";
+import SentimentLab from "./pages/SentimentLab";
 import SectorWatchlist from "./pages/SectorWatchlist";
 import GeopoliticalTracker from "./pages/GeopoliticalTracker";
-import SentimentLab from "./pages/SentimentLab";
 import AskAI from "./pages/AskAI";
 import AboutProject from "./pages/AboutProject";
-import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import NotFound from "./pages/NotFound";
 
-// Inside <Routes>
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -20,18 +20,20 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<MorningBrief />} />
-          <Route path="/sectors" element={<SectorWatchlist />} />
-          <Route path="/geopolitical" element={<GeopoliticalTracker />} />
-          <Route path="/sentiment-lab" element={<SentimentLab />} />
-          <Route path="/ask-ai" element={<AskAI />} />
-          <Route path="/about" element={<AboutProject />} />
-          <Route path="*" element={<NotFound />} />
-          <Route path="/admin" element={<Admin />} />
-        </Routes>
-      </BrowserRouter>
+      <DashboardProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/"              element={<MorningBrief />}        />
+            <Route path="/sentiment-lab" element={<SentimentLab />}        />
+            <Route path="/sectors"       element={<SectorWatchlist />}      />
+            <Route path="/geopolitical"  element={<GeopoliticalTracker />}  />
+            <Route path="/ask-ai"        element={<AskAI />}               />
+            <Route path="/about"         element={<AboutProject />}         />
+            <Route path="/admin"         element={<Admin />}               />
+            <Route path="*"             element={<NotFound />}             />
+          </Routes>
+        </BrowserRouter>
+      </DashboardProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
