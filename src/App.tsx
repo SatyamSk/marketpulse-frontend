@@ -10,7 +10,10 @@ import SentimentLab from "./pages/SentimentLab";
 import AskAI from "./pages/AskAI";
 import AboutProject from "./pages/AboutProject";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
 
+// Inside <Routes>:
+<Route path="/admin" element={<Admin />} />
 const queryClient = new QueryClient();
 
 const App = () => (
