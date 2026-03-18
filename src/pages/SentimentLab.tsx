@@ -16,7 +16,7 @@ const TT = {
 };
 
 const SECTOR_COLORS: Record<string, string> = {
-  Geopolitics:   "#ef4444", IT:      "#f59e0b",
+  IT:      "#f59e0b",
   Banking:       "#22c55e", Energy:  "#3b82f6",
   FMCG:          "#a78bfa", Startup: "#06b6d4",
   Manufacturing: "#f472b6", Healthcare: "#10b981",
