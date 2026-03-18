@@ -448,7 +448,7 @@ export default function SentimentLab() {
                   { q: "Negative Alarming", color: "#ef4444", desc: "Panic/crisis. Reduce exposure."           },
                 ].map(({ q, color, desc }) => (
                   <div key={q} className="flex gap-2">
-                    <div className="w-2 h-2 rounded-full mt-0.5 shrink-0" style={{ background: color }} />
+                    <div className="w-2 h-2 rounded-full mt-0.5 shrink-0" style={{ background: color }} </div>
                     <div>
                       <p className="font-semibold text-foreground">{q}</p>
                       <p className="text-muted-foreground">{desc}</p>
