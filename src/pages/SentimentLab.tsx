@@ -286,4 +286,212 @@ export default function SentimentLab() {
                 When bars point in opposite directions: mild positives are masking severe negatives (or vice versa) — hidden risk signal
               </p>
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={divergenceData} layout="vertical" margin={{ lef
+                <BarChart data={divergenceData} layout="vertical" margin={{ left: 0, right: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis type="number" domain={[-100, 110]} tick={{ fill: "#64748b", fontSize: 10 }} />
+                  <YAxis type="category" dataKey="sector" tick={{ fill: "#94a3b8", fontSize: 11 }} width={88} />
+                  <Tooltip contentStyle={TT} formatter={(v: any, name: string) => [
+                    `${Number(v) > 0 ? "+" : ""}${Number(v).toFixed(1)}`, name
+                  ]} />
+                  <ReferenceLine x={0} stroke="rgba(255,255,255,0.2)" />
+                  <Bar dataKey="nss" name="NSS" fill="#3b82f6" radius={[0, 3, 3, 0]} barSize={9} />
+                  <Bar dataKey="impact_weighted" name="Impact-Weighted" fill="#a78bfa" radius={[0, 3, 3, 0]} barSize={9} />
+                  <Legend wrapperStyle={{ fontSize: 10, color: "#94a3b8" }} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {divergenceData.some((d: any) => d.flagged) && (
+              <div className="p-4 rounded-xl border border-warning/25 bg-warning/5">
+                <p className="text-xs font-semibold text-warning mb-1">
+                  High Divergence Detected
+                </p>
+                <p className="text-xs text-muted-foreground mb-2">
+                  These sectors have NSS and Impact-Weighted scores pointing in opposite directions.
+                  Surface-level sentiment is misleading. Exercise extra caution.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {divergenceData.filter((d: any) => d.flagged).map((d: any) => (
+                    <span key={d.sector} className="tag bg-warning/15 text-warning">
+                      {d.sector} — Δ{d.divergence.toFixed(1)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── VALENCE-AROUSAL ── */}
+        {tab === "va" && (
+          <div className="space-y-3 fade-in">
+            <div className="glass-card p-4">
+              <h3 className="label-text mb-0.5">Valence-Arousal Map</h3>
+              <p className="text-[10px] text-muted-foreground mb-4">
+                Two-dimensional sentiment · X = Valence (negative/positive) · Y = Arousal (calm/alarming) · Bubble = mentions
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-3 text-[10px]">
+                {[
+                  { q: "Positive Calm",     color: "#22c55e", desc: "Steady bullish. Low urgency. Accumulation zone."         },
+                  { q: "Positive Alarming", color: "#f59e0b", desc: "Euphoric/volatile. Positive but watch for reversal."     },
+                  { q: "Negative Calm",     color: "#64748b", desc: "Slow deterioration. No panic yet. Monitor closely."     },
+                  { q: "Negative Alarming", color: "#ef4444", desc: "Panic/crisis. Immediate risk. Reduce exposure."          },
+                ].map(({ q, color, desc }) => (
+                  <div key={q} className="flex gap-2 items-start">
+                    <div className="w-2 h-2 rounded-full mt-0.5 shrink-0" style={{ background: color }} />
+                    <div>
+                      <p className="font-medium text-foreground">{q}</p>
+                      <p className="text-muted-foreground leading-relaxed">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <ScatterChart margin={{ bottom: 28, left: 0, right: 20, top: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis
+                    type="number" dataKey="x" name="Valence" domain={[0, 1]}
+                    tick={{ fill: "#64748b", fontSize: 10 }}
+                    label={{ value: "Valence (Negative ← → Positive)", position: "bottom", fill: "#475569", fontSize: 10 }}
+                  />
+                  <YAxis
+                    type="number" dataKey="y" name="Arousal" domain={[0, 1]}
+                    tick={{ fill: "#64748b", fontSize: 10 }}
+                    label={{ value: "Arousal (Calm ← → Alarming)", angle: -90, position: "insideLeft", fill: "#475569", fontSize: 10 }}
+                    width={28}
+                  />
+                  <ZAxis type="number" dataKey="z" range={[80, 480]} />
+                  <ReferenceLine x={0.5} stroke="rgba(255,255,255,0.1)" />
+                  <ReferenceLine y={0.5} stroke="rgba(255,255,255,0.1)" />
+                  <Tooltip
+                    contentStyle={TT}
+                    formatter={(_: any, __: any, props: any) => {
+                      const d = props.payload;
+                      const q = quadrant(d.x, d.y);
+                      return [
+                        `${d.sector} — ${q}\nCSI: ${d.csi > 0 ? "+" : ""}${Number(d.csi).toFixed(1)}`,
+                        ""
+                      ];
+                    }}
+                  />
+                  <Scatter
+                    data={vaData}
+                    label={{ dataKey: "sector", fill: "#94a3b8", fontSize: 9 }}
+                  >
+                    {vaData.map((e: any, i: number) => {
+                      const q = quadrant(e.x, e.y);
+                      return (
+                        <Cell
+                          key={i}
+                          fill={quadrantColor[q] ?? "#64748b"}
+                          opacity={sector === "" || sector === e.sector ? 1 : 0.3}
+                        />
+                      );
+                    })}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* ── VELOCITY TREND ── */}
+        {tab === "velocity" && (
+          <div className="space-y-3 fade-in">
+            <div className="glass-card p-4">
+              <h3 className="label-text mb-0.5">CSI Velocity Trend — All Sectors</h3>
+              <p className="text-[10px] text-muted-foreground mb-4">
+                3-day moving average of Composite Sentiment Index · Falling line = deteriorating sentiment · Use for momentum signals
+              </p>
+              {velocity_trend && velocity_trend.length > 1 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={velocity_trend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                    <XAxis dataKey="run" tick={{ fill: "#64748b", fontSize: 10 }}
+                      label={{ value: "Pipeline Run →", position: "bottom", fill: "#475569", fontSize: 10 }} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 10 }} width={28} />
+                    <Tooltip contentStyle={TT} />
+                    <Legend wrapperStyle={{ fontSize: 10, color: "#94a3b8" }} />
+                    <ReferenceLine y={0} stroke="rgba(255,255,255,0.18)" strokeDasharray="4 4" />
+                    {sectorTrendKeys.map(s => (
+                      <Line
+                        key={s} type="monotone" dataKey={s}
+                        stroke={SECTOR_COLORS[s] ?? "#64748b"}
+                        strokeWidth={s === sector ? 2.5 : 1.5}
+                        strokeOpacity={s === sector || sector === "" ? 1 : 0.4}
+                        dot={{ r: 2.5 }}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">
+                  Run the pipeline on multiple days to see trend data.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── RADAR ── */}
+        {tab === "radar" && (
+          <div className="space-y-3 fade-in">
+            <div className="glass-card p-4">
+              <h3 className="label-text mb-0.5">
+                {activeSector?.sector ?? "Sector"} — Multi-Dimensional Radar
+              </h3>
+              <p className="text-[10px] text-muted-foreground mb-4">
+                Normalized 0–100 scale across 6 dimensions · Higher area = stronger overall signal
+              </p>
+              <div className="flex flex-col lg:flex-row gap-6">
+                <ResponsiveContainer width="100%" height={260}>
+                  <RadarChart data={radarData} margin={{ top: 10, bottom: 10 }}>
+                    <PolarGrid stroke="rgba(255,255,255,0.08)" />
+                    <PolarAngleAxis dataKey="metric" tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                    <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar
+                      name={activeSector?.sector ?? "Sector"}
+                      dataKey="value"
+                      stroke={activeSectorColor}
+                      fill={activeSectorColor}
+                      fillOpacity={0.2}
+                      strokeWidth={2}
+                    />
+                    <Tooltip contentStyle={TT} />
+                  </RadarChart>
+                </ResponsiveContainer>
+
+                <div className="lg:w-52 shrink-0 space-y-2">
+                  {radarData.map(({ metric, value }) => (
+                    <div key={metric}>
+                      <div className="flex items-center justify-between text-[11px] mb-1">
+                        <span className="text-muted-foreground">{metric}</span>
+                        <span className="font-mono text-foreground font-medium">
+                          {value.toFixed(0)}
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-accent rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${value}%`,
+                            background: value >= 60 ? activeSectorColor : value >= 40 ? "#f59e0b" : "#ef4444",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-muted-foreground pt-2 leading-relaxed">
+                    Low Risk = 100 − weighted risk score.
+                    Momentum = velocity normalized 0–100.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </DashboardLayout>
+  );
+}
