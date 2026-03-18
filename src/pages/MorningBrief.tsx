@@ -6,7 +6,7 @@ import {
   ArrowUpDown, Zap
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { MetricCard } from "@/components/MetricCard";
+import { MetricCard } from "@/components/MetricCard"; 
 import { SentimentBadge } from "@/components/SentimentBadge";
 import { useDashboard } from "@/hooks/useDashboard";
 import { api } from "@/lib/api";
