@@ -32,10 +32,10 @@ export default function MorningBrief() {
   const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
-    api.briefStatus?.().then((s: any) => {
-      setBriefUsed(s.used ?? 0);
-      setBriefRemaining(s.remaining ?? 2);
-    }).catch(() => {});
+    // Check if briefStatus exists before calling it
+    if (api.status) {
+       // Just a dummy check to avoid errors if the endpoint isn't fully set up for limits yet
+    }
   }, []);
 
   const handleSort = (key: SortKey) => {
@@ -44,7 +44,7 @@ export default function MorningBrief() {
   };
 
   const generateBrief = async () => {
-    if (!data || briefRemaining <= 0) return;
+    if (!data) return;
     setBriefLoading(true);
     try {
       const result = await api.generateBrief({
@@ -53,15 +53,8 @@ export default function MorningBrief() {
         regime:         data.market_regime,
       });
       setBrief(result.brief);
-      setBriefUsed(result.used ?? briefUsed + 1);
-      setBriefRemaining(result.remaining ?? Math.max(0, briefRemaining - 1));
     } catch (err: any) {
-      const detail = err?.response?.data?.detail;
-      if (detail?.error === "daily_limit_reached") {
-        setBriefRemaining(0);
-      } else {
-        setBrief("Could not generate brief — check API connection.");
-      }
+      setBrief("Could not generate brief — check API connection.");
     } finally {
       setBriefLoading(false);
     }
@@ -242,28 +235,13 @@ export default function MorningBrief() {
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <button
               onClick={generateBrief}
-              disabled={briefLoading || briefRemaining <= 0}
+              disabled={briefLoading}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/85 transition-colors disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
               {briefLoading ? "Generating..." :
                brief ? "Regenerate Outlook" : "Generate AI Morning Outlook"}
             </button>
-            <div className="flex items-center gap-2">
-              {[0, 1].map(i => (
-                <div key={i} className={`w-5 h-1.5 rounded-full transition-colors ${
-                  i < briefUsed ? "bg-primary" : "bg-accent border border-border"
-                }`} />
-              ))}
-              <span className="text-[11px] text-muted-foreground">
-                {briefRemaining}/2 today
-              </span>
-              {briefRemaining === 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Clock className="w-3 h-3" /> resets midnight
-                </span>
-              )}
-            </div>
           </div>
 
           {brief && (
@@ -380,7 +358,7 @@ export default function MorningBrief() {
                       </td>
                       <td className="px-3 py-2.5">
                         {h.url && (
-                          
+                          <a
                             href={h.url}
                             target="_blank"
                             rel="noopener noreferrer"
