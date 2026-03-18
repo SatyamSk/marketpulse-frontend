@@ -25,9 +25,7 @@ const TT = {
 
 function ShockBadge({ status, zScore }: { status: string; zScore: number | null }) {
   if (!status || status === "Normal") {
-    return (
-      <span className="tag bg-accent/60 text-muted-foreground">Normal</span>
-    );
+    return <span className="tag bg-accent/60 text-muted-foreground">Normal</span>;
   }
   if (status === "Watch") {
     return (
@@ -38,16 +36,16 @@ function ShockBadge({ status, zScore }: { status: string; zScore: number | null 
   }
   if (status === "Shock") {
     return (
-      <span className="tag bg-warning/15 text-warning flex items-center gap-1">
-        <Zap className="w-2.5 h-2.5" />
+      <span className="tag bg-warning/15 text-warning" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+        <Zap style={{ width: 10, height: 10 }} />
         Shock {zScore != null ? `Z:${Number(zScore).toFixed(1)}` : ""}
       </span>
     );
   }
   if (status === "Major Shock") {
     return (
-      <span className="tag bg-bearish/15 text-bearish flex items-center gap-1">
-        <Zap className="w-2.5 h-2.5" />
+      <span className="tag bg-bearish/15 text-bearish" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+        <Zap style={{ width: 10, height: 10 }} />
         Major Shock {zScore != null ? `Z:${Number(zScore).toFixed(1)}` : ""}
       </span>
     );
@@ -65,12 +63,14 @@ export default function MorningBrief() {
   const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
-    api.briefStatus?.()
-      .then((s: any) => {
-        setBriefUsed(s.used ?? 0);
-        setBriefRemaining(s.remaining ?? 2);
-      })
-      .catch(() => {});
+    if (api.briefStatus) {
+      api.briefStatus()
+        .then((s: any) => {
+          setBriefUsed(s.used ?? 0);
+          setBriefRemaining(s.remaining ?? 2);
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const handleSort = (key: SortKey) => {
@@ -200,10 +200,9 @@ export default function MorningBrief() {
           />
         </div>
 
-        {/* Regime + Pareto side by side */}
+        {/* Regime + Pareto */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 fade-in">
 
-          {/* Regime Banner */}
           <div className={`glass-card p-5 border ${regimeBorder}`}>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className={`text-base font-semibold ${regimeColor}`}>
@@ -219,8 +218,8 @@ export default function MorningBrief() {
             </p>
             <div className="space-y-2.5">
               {[
-                { label: "Watch",  value: market_regime.watch           },
-                { label: "Avoid",  value: market_regime.avoid           },
+                { label: "Watch",  value: market_regime.watch            },
+                { label: "Avoid",  value: market_regime.avoid            },
                 { label: "Nifty",  value: market_regime.nifty_implication },
               ].map(({ label, value }) => (
                 <div key={label} className="flex gap-2.5 text-xs">
@@ -231,7 +230,6 @@ export default function MorningBrief() {
             </div>
           </div>
 
-          {/* Pareto Chart */}
           <div className="glass-card p-4">
             <h3 className="label-text mb-0.5">Pareto Risk Concentration</h3>
             <p className="text-[10px] text-muted-foreground mb-3">
@@ -269,7 +267,7 @@ export default function MorningBrief() {
           </div>
         </div>
 
-        {/* Shock Summary Bar */}
+        {/* Shock Summary */}
         {totalShocks > 0 && (
           <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-xl border border-warning/25 bg-warning/5 fade-in">
             <Zap className="w-4 h-4 text-warning shrink-0" />
@@ -277,17 +275,17 @@ export default function MorningBrief() {
               {totalShocks} statistical shock event{totalShocks > 1 ? "s" : ""} detected today
             </span>
             <div className="flex gap-2 flex-wrap">
-              {shock_counts?.major > 0 && (
+              {(shock_counts?.major ?? 0) > 0 && (
                 <span className="tag bg-bearish/15 text-bearish">
                   {shock_counts.major} major shock{shock_counts.major > 1 ? "s" : ""}
                 </span>
               )}
-              {shock_counts?.shock > 0 && (
+              {(shock_counts?.shock ?? 0) > 0 && (
                 <span className="tag bg-warning/15 text-warning">
                   {shock_counts.shock} shock{shock_counts.shock > 1 ? "s" : ""}
                 </span>
               )}
-              {shock_counts?.watch > 0 && (
+              {(shock_counts?.watch ?? 0) > 0 && (
                 <span className="tag bg-primary/15 text-primary">
                   {shock_counts.watch} watch
                 </span>
@@ -350,7 +348,7 @@ export default function MorningBrief() {
           )}
         </div>
 
-        {/* Headlines Table — scrollable container */}
+        {/* Headlines Table — fixed height scrollable */}
         <div className="glass-card overflow-hidden fade-in">
           <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -369,12 +367,13 @@ export default function MorningBrief() {
             </span>
           </div>
 
-          {/* Fixed-height scrollable container */}
           <div className="overflow-x-auto">
             <div style={{ maxHeight: "420px", overflowY: "auto" }}>
               <table className="w-full">
-                <thead className="sticky top-0 z-10"
-                  style={{ background: "hsl(228 18% 10%)" }}>
+                <thead
+                  className="sticky top-0 z-10"
+                  style={{ background: "hsl(228 18% 10%)" }}
+                >
                   <tr className="border-b border-border/60">
                     {[
                       { key: "title",        label: "Headline"  },
@@ -401,7 +400,7 @@ export default function MorningBrief() {
                 <tbody>
                   {sorted.map((h: any, i: number) => {
                     const shockStatus = h.shock_status ?? "Normal";
-                    const isShock     = shockStatus === "Major Shock" || shockStatus === "Shock";
+                    const sourceUrl   = h["url"] as string | undefined;
                     return (
                       <tr
                         key={i}
@@ -446,9 +445,9 @@ export default function MorningBrief() {
                           {h.one_line_insight}
                         </td>
                         <td className="px-3 py-2.5">
-                          {h.url && (
+                          {sourceUrl && (
                             
-                              <a href={h.url}
+                              href={sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
