@@ -447,7 +447,7 @@ export default function MorningBrief() {
                         <td className="px-3 py-2.5">
                           {sourceUrl && (
                             
-                              href={sourceUrl}
+                              <a href={sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
