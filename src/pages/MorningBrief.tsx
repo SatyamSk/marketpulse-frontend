@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   Newspaper, AlertTriangle, Globe, Sparkles,
-  Activity, RefreshCw, Clock, ExternalLink, ArrowUpDown
+  Activity, RefreshCw, Clock, ExternalLink,
+  ArrowUpDown, Zap
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard";
@@ -22,6 +23,38 @@ const TT = {
   borderRadius: 8, color: "#e2e8f0", fontSize: 12,
 };
 
+function ShockBadge({ status, zScore }: { status: string; zScore: number | null }) {
+  if (!status || status === "Normal") {
+    return (
+      <span className="tag bg-accent/60 text-muted-foreground">Normal</span>
+    );
+  }
+  if (status === "Watch") {
+    return (
+      <span className="tag bg-primary/15 text-primary">
+        Watch {zScore != null ? `Z:${Number(zScore).toFixed(1)}` : ""}
+      </span>
+    );
+  }
+  if (status === "Shock") {
+    return (
+      <span className="tag bg-warning/15 text-warning flex items-center gap-1">
+        <Zap className="w-2.5 h-2.5" />
+        Shock {zScore != null ? `Z:${Number(zScore).toFixed(1)}` : ""}
+      </span>
+    );
+  }
+  if (status === "Major Shock") {
+    return (
+      <span className="tag bg-bearish/15 text-bearish flex items-center gap-1">
+        <Zap className="w-2.5 h-2.5" />
+        Major Shock {zScore != null ? `Z:${Number(zScore).toFixed(1)}` : ""}
+      </span>
+    );
+  }
+  return <span className="tag bg-accent/60 text-muted-foreground">{status}</span>;
+}
+
 export default function MorningBrief() {
   const { data, loading, error, refetch, lastFetch } = useDashboard();
   const [brief, setBrief]                   = useState<string | null>(null);
@@ -32,10 +65,12 @@ export default function MorningBrief() {
   const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
-    // Check if briefStatus exists before calling it
-    if (api.status) {
-       // Just a dummy check to avoid errors if the endpoint isn't fully set up for limits yet
-    }
+    api.briefStatus?.()
+      .then((s: any) => {
+        setBriefUsed(s.used ?? 0);
+        setBriefRemaining(s.remaining ?? 2);
+      })
+      .catch(() => {});
   }, []);
 
   const handleSort = (key: SortKey) => {
@@ -44,7 +79,7 @@ export default function MorningBrief() {
   };
 
   const generateBrief = async () => {
-    if (!data) return;
+    if (!data || briefRemaining <= 0) return;
     setBriefLoading(true);
     try {
       const result = await api.generateBrief({
@@ -53,8 +88,15 @@ export default function MorningBrief() {
         regime:         data.market_regime,
       });
       setBrief(result.brief);
+      setBriefUsed(result.used ?? briefUsed + 1);
+      setBriefRemaining(result.remaining ?? Math.max(0, briefRemaining - 1));
     } catch (err: any) {
-      setBrief("Could not generate brief — check API connection.");
+      const detail = err?.response?.data?.detail;
+      if (detail?.error === "daily_limit_reached") {
+        setBriefRemaining(0);
+      } else {
+        setBrief("Could not generate outlook — check API connection.");
+      }
     } finally {
       setBriefLoading(false);
     }
@@ -80,7 +122,7 @@ export default function MorningBrief() {
 
   if (!data) return null;
 
-  const { market_regime, benchmark, headlines, pareto, summary_stats } = data;
+  const { market_regime, benchmark, headlines, pareto, summary_stats, shock_counts } = data;
 
   const sorted = [...headlines].sort((a: any, b: any) => {
     const av = a[sortKey] ?? 0;
@@ -97,9 +139,11 @@ export default function MorningBrief() {
     market_regime.regime === "Panic"    ? "border-bearish/25 bg-bearish/4" :
                                           "border-warning/25 bg-warning/4";
 
-  const topRisk = [...benchmark].sort((a: any, b: any) =>
-    b.avg_weighted_risk - a.avg_weighted_risk
+  const topRisk = [...benchmark].sort(
+    (a: any, b: any) => b.avg_weighted_risk - a.avg_weighted_risk
   )[0];
+
+  const totalShocks = (shock_counts?.major ?? 0) + (shock_counts?.shock ?? 0);
 
   return (
     <DashboardLayout>
@@ -108,14 +152,15 @@ export default function MorningBrief() {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-2 fade-in">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Morning Brief</h1>
+            <h1 className="text-xl font-semibold text-foreground">Market Outlook</h1>
             <p className="text-xs text-muted-foreground">
-              Expected conditions for {new Date().toLocaleDateString("en-IN", {
-                weekday: "long", day: "numeric", month: "long"
+              Expected conditions for{" "}
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long", day: "numeric", month: "long",
               })}
               {lastFetch && (
                 <span className="ml-2 opacity-50">
-                  · {lastFetch.toLocaleTimeString()}
+                  · updated {lastFetch.toLocaleTimeString()}
                 </span>
               )}
             </p>
@@ -136,24 +181,22 @@ export default function MorningBrief() {
             icon={<Newspaper className="w-4 h-4" />}
           />
           <MetricCard
-            label="Top Risk"
+            label="Top Risk Sector"
             value={topRisk?.sector ?? "—"}
             icon={<AlertTriangle className="w-4 h-4" />}
             colorClass="text-bearish"
           />
           <MetricCard
-            label="Regime"
+            label="Expected Regime"
             value={market_regime.regime}
             icon={<Activity className="w-4 h-4" />}
             colorClass={regimeColor}
           />
           <MetricCard
-            label="Geo Flags"
-            value={summary_stats.geopolitical_flags}
-            icon={<Globe className="w-4 h-4" />}
-            colorClass={
-              summary_stats.geopolitical_flags > 3 ? "text-warning" : "text-muted-foreground"
-            }
+            label="Shock Events"
+            value={totalShocks}
+            icon={<Zap className="w-4 h-4" />}
+            colorClass={totalShocks > 0 ? "text-warning" : "text-muted-foreground"}
           />
         </div>
 
@@ -162,24 +205,22 @@ export default function MorningBrief() {
 
           {/* Regime Banner */}
           <div className={`glass-card p-5 border ${regimeBorder}`}>
-            <div className="flex items-center gap-2 mb-2">
-             <span className={`text-base font-semibold ${regimeColor}`}>
-              {market_regime.regime}
-            </span>
-            <span className="tag bg-accent text-muted-foreground">
-              Expected Regime
-            </span>
-            <span className="text-[10px] text-muted-foreground ml-1">
-              · based on {data?.summary_stats?.total_headlines ?? 0} headlines
-            </span>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className={`text-base font-semibold ${regimeColor}`}>
+                {market_regime.regime}
+              </span>
+              <span className="tag bg-accent text-muted-foreground">Expected Regime</span>
+              <span className="text-[10px] text-muted-foreground">
+                · {summary_stats.total_headlines} headlines
+              </span>
             </div>
             <p className="text-xs text-secondary-foreground mb-4 leading-relaxed">
               {market_regime.description}
             </p>
             <div className="space-y-2.5">
               {[
-                { label: "Watch",  value: market_regime.watch          },
-                { label: "Avoid",  value: market_regime.avoid          },
+                { label: "Watch",  value: market_regime.watch           },
+                { label: "Avoid",  value: market_regime.avoid           },
                 { label: "Nifty",  value: market_regime.nifty_implication },
               ].map(({ label, value }) => (
                 <div key={label} className="flex gap-2.5 text-xs">
@@ -190,14 +231,14 @@ export default function MorningBrief() {
             </div>
           </div>
 
-          {/* Pareto Chart — compact */}
+          {/* Pareto Chart */}
           <div className="glass-card p-4">
             <h3 className="label-text mb-0.5">Pareto Risk Concentration</h3>
             <p className="text-[10px] text-muted-foreground mb-3">
-              Top sectors driving 80% of market risk
+              Top sectors driving 80% of expected market risk
             </p>
             <ResponsiveContainer width="100%" height={180}>
-              <ComposedChart data={pareto} margin={{ top: 4, right: 24, bottom: 0, left: 0 }}>
+              <ComposedChart data={pareto} margin={{ top: 4, right: 28, bottom: 0, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis
                   dataKey="sector"
@@ -211,10 +252,8 @@ export default function MorningBrief() {
                 <YAxis yAxisId="r" orientation="right" domain={[0, 100]}
                   tick={{ fill: "#64748b", fontSize: 9 }} width={24} />
                 <Tooltip contentStyle={TT} />
-                <ReferenceLine yAxisId="r" y={80} stroke="#f59e0b"
-                  strokeDasharray="4 4"
-                  label={{ value: "80%", fill: "#f59e0b", fontSize: 9, position: "insideRight" }}
-                />
+                <ReferenceLine yAxisId="r" y={80} stroke="#f59e0b" strokeDasharray="4 4"
+                  label={{ value: "80%", fill: "#f59e0b", fontSize: 9, position: "insideRight" }} />
                 <Bar yAxisId="l" dataKey="avg_weighted_risk" radius={[2, 2, 0, 0]}>
                   {pareto.map((e: any, i: number) => (
                     <Cell key={i}
@@ -230,35 +269,76 @@ export default function MorningBrief() {
           </div>
         </div>
 
+        {/* Shock Summary Bar */}
+        {totalShocks > 0 && (
+          <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-xl border border-warning/25 bg-warning/5 fade-in">
+            <Zap className="w-4 h-4 text-warning shrink-0" />
+            <span className="text-xs font-semibold text-warning">
+              {totalShocks} statistical shock event{totalShocks > 1 ? "s" : ""} detected today
+            </span>
+            <div className="flex gap-2 flex-wrap">
+              {shock_counts?.major > 0 && (
+                <span className="tag bg-bearish/15 text-bearish">
+                  {shock_counts.major} major shock{shock_counts.major > 1 ? "s" : ""}
+                </span>
+              )}
+              {shock_counts?.shock > 0 && (
+                <span className="tag bg-warning/15 text-warning">
+                  {shock_counts.shock} shock{shock_counts.shock > 1 ? "s" : ""}
+                </span>
+              )}
+              {shock_counts?.watch > 0 && (
+                <span className="tag bg-primary/15 text-primary">
+                  {shock_counts.watch} watch
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Brief Generator */}
         <div className="fade-in">
           <div className="flex flex-wrap items-center gap-3 mb-3">
             <button
               onClick={generateBrief}
-              disabled={briefLoading}
+              disabled={briefLoading || briefRemaining <= 0}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/85 transition-colors disabled:opacity-50"
             >
               <Sparkles className="w-4 h-4" />
               {briefLoading ? "Generating..." :
-               brief ? "Regenerate Outlook" : "Generate AI Morning Outlook"}
+               brief ? "Regenerate Outlook" : "Generate Expected Market Outlook"}
             </button>
+            <div className="flex items-center gap-2">
+              {[0, 1].map(i => (
+                <div key={i} className={`w-5 h-1.5 rounded-full transition-colors ${
+                  i < briefUsed ? "bg-primary" : "bg-accent border border-border"
+                }`} />
+              ))}
+              <span className="text-[11px] text-muted-foreground">
+                {briefRemaining}/2 today
+              </span>
+              {briefRemaining === 0 && (
+                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Clock className="w-3 h-3" /> resets midnight
+                </span>
+              )}
+            </div>
           </div>
 
           {brief && (
             <div className="glass-card overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-accent/25">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-accent/20">
                 <Sparkles className="w-3.5 h-3.5 text-primary" />
                 <span className="label-text">Expected Market Outlook</span>
                 <span className="ml-auto text-[10px] text-muted-foreground">
-                  {summary_stats.total_headlines} headlines · Python-scored
+                  {summary_stats.total_headlines} headlines · Python-scored · AI-narrated
                 </span>
               </div>
               <div className="p-5">
                 <div className="
                   prose prose-sm prose-invert max-w-none text-secondary-foreground
                   [&_h2]:text-foreground [&_h2]:text-sm [&_h2]:font-semibold
-                  [&_h2]:mt-4 [&_h2]:mb-1.5 [&_h2]:border-b [&_h2]:border-border/40
-                  [&_h2]:pb-1
+                  [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-border/40 [&_h2]:pb-1
                   [&_p]:text-[13px] [&_p]:leading-relaxed
                   [&_ul]:text-[13px] [&_li]:leading-relaxed [&_li]:mb-1
                   [&_strong]:text-foreground [&_strong]:font-semibold
@@ -270,110 +350,120 @@ export default function MorningBrief() {
           )}
         </div>
 
-        {/* Headlines Table */}
+        {/* Headlines Table — scrollable container */}
         <div className="glass-card overflow-hidden fade-in">
           <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
-            <h3 className="label-text">Headlines by impact</h3>
-            <span className="text-[10px] text-muted-foreground">
-              {headlines.length} total · click row to open source
+            <div className="flex items-center gap-3">
+              <h3 className="label-text">Headlines by impact</h3>
+              <span className="tag bg-accent/60 text-muted-foreground">
+                {headlines.length} total
+              </span>
+              {totalShocks > 0 && (
+                <span className="tag bg-warning/15 text-warning">
+                  {totalShocks} shocks
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] text-muted-foreground hidden sm:block">
+              Click source icon to open article
             </span>
           </div>
+
+          {/* Fixed-height scrollable container */}
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/60 bg-accent/15">
-                  {[
-                    { key: "title",        label: "Headline"  },
-                    { key: "sector",       label: "Sector"    },
-                    { key: "sentiment",    label: "Sentiment" },
-                    { key: "impact_score", label: "Impact"    },
-                    { key: "z_score",      label: "Shock"     },
-                    { key: null,           label: "AI Insight"},
-                    { key: null,           label: ""          },
-                  ].map(({ key, label }) => (
-                    <th
-                      key={label + (key ?? "")}
-                      className="text-left px-3 py-2.5 label-text cursor-pointer whitespace-nowrap"
-                      onClick={() => key && handleSort(key as SortKey)}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        {label}
-                        {key && <ArrowUpDown className="w-2.5 h-2.5 opacity-40" />}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sorted.map((h: any, i: number) => {
-                  const isShock = h.shock_status === "Major Shock" || h.shock_status === "Shock";
-                  return (
-                    <tr
-                      key={i}
-                      className={`border-b border-border/30 hover:bg-accent/25 transition-colors ${
-                        h.shock_status === "Major Shock"
-                          ? "shadow-[inset_3px_0_0_#ef4444]"
-                          : h.shock_status === "Shock"
-                          ? "shadow-[inset_3px_0_0_#f59e0b]"
-                          : ""
-                      }`}
-                    >
-                      <td className="px-3 py-2.5 max-w-[180px] lg:max-w-xs">
-                        <span className="line-clamp-2 text-xs text-foreground leading-relaxed">
-                          {h.title}
+            <div style={{ maxHeight: "420px", overflowY: "auto" }}>
+              <table className="w-full">
+                <thead className="sticky top-0 z-10"
+                  style={{ background: "hsl(228 18% 10%)" }}>
+                  <tr className="border-b border-border/60">
+                    {[
+                      { key: "title",        label: "Headline"  },
+                      { key: "sector",       label: "Sector"    },
+                      { key: "sentiment",    label: "Sentiment" },
+                      { key: "impact_score", label: "Impact"    },
+                      { key: "z_score",      label: "Shock"     },
+                      { key: null,           label: "AI Insight"},
+                      { key: null,           label: ""          },
+                    ].map(({ key, label }) => (
+                      <th
+                        key={label + (key ?? "")}
+                        className="text-left px-3 py-2.5 label-text cursor-pointer whitespace-nowrap"
+                        onClick={() => key && handleSort(key as SortKey)}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          {label}
+                          {key && <ArrowUpDown className="w-2.5 h-2.5 opacity-40" />}
                         </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span className="tag bg-accent text-muted-foreground">{h.sector}</span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <SentimentBadge sentiment={h.sentiment} />
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={`font-semibold text-xs ${
-                          h.impact_score >= 8 ? "text-bearish" :
-                          h.impact_score >= 6 ? "text-warning" : "text-muted-foreground"
-                        }`}>
-                          {h.impact_score}/10
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={`tag ${
-                          h.shock_status === "Major Shock"
-                            ? "bg-bearish/15 text-bearish"
-                            : h.shock_status === "Shock"
-                            ? "bg-warning/15 text-warning"
-                            : "bg-accent/60 text-muted-foreground"
-                        }`}>
-                          {h.shock_status ?? "Normal"}
-                          {h.z_score != null && (
-                            <span className="ml-1 opacity-60">
-                              Z:{Number(h.z_score).toFixed(1)}
-                            </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.map((h: any, i: number) => {
+                    const shockStatus = h.shock_status ?? "Normal";
+                    const isShock     = shockStatus === "Major Shock" || shockStatus === "Shock";
+                    return (
+                      <tr
+                        key={i}
+                        className={`border-b border-border/25 hover:bg-accent/20 transition-colors ${
+                          shockStatus === "Major Shock"
+                            ? "shadow-[inset_3px_0_0_#ef4444]"
+                            : shockStatus === "Shock"
+                            ? "shadow-[inset_3px_0_0_#f59e0b]"
+                            : shockStatus === "Watch"
+                            ? "shadow-[inset_3px_0_0_#6366f1]"
+                            : ""
+                        }`}
+                      >
+                        <td className="px-3 py-2.5 max-w-[160px] lg:max-w-xs">
+                          <span className="line-clamp-2 text-xs text-foreground leading-relaxed">
+                            {h.title}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <span className="tag bg-accent text-muted-foreground">
+                            {h.sector}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <SentimentBadge sentiment={h.sentiment} />
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <span className={`font-semibold text-xs ${
+                            h.impact_score >= 8 ? "text-bearish" :
+                            h.impact_score >= 6 ? "text-warning" : "text-muted-foreground"
+                          }`}>
+                            {h.impact_score}/10
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <ShockBadge
+                            status={shockStatus}
+                            zScore={h.z_score != null ? Number(h.z_score) : null}
+                          />
+                        </td>
+                        <td className="px-3 py-2.5 text-muted-foreground text-[11px] max-w-[160px] lg:max-w-sm leading-relaxed">
+                          {h.one_line_insight}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          {h.url && (
+                            
+                              href={h.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
+                              title="Open source"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
                           )}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-muted-foreground text-[11px] max-w-[180px] lg:max-w-xs">
-                        {h.one_line_insight}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        {h.url && (
-                          <a
-                            href={h.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
-                            title="Open source"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
