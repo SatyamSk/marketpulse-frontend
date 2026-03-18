@@ -12,8 +12,7 @@ import AboutProject from "./pages/AboutProject";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 
-// Inside <Routes>:
-<Route path="/admin" element={<Admin />} />
+// Inside <Routes>
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -30,6 +29,7 @@ const App = () => (
           <Route path="/ask-ai" element={<AskAI />} />
           <Route path="/about" element={<AboutProject />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
