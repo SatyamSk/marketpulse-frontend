@@ -23,4 +23,7 @@ export const api = {
   briefStatus:   () => get<any>("/api/brief/status"),
   chat:          (payload: any) => post<any>("/api/chat", payload),
   status:        () => get<any>("/api/status"),
+  triggerPipeline: (secret: string) =>
+  post<any>("/api/pipeline/run", { secret }),
+  pipelineStatus: () => get<any>("/api/pipeline/status"),
 };
