@@ -128,7 +128,7 @@ export default function AskAI() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
+      <div className="max-w-3xl mx-auto flex flex-col" style={{ height: "calc(100vh - 120px)" }}>
 
         {/* Header */}
         <div className="flex items-start justify-between mb-4 fade-in shrink-0">
