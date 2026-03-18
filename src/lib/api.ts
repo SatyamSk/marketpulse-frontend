@@ -17,9 +17,10 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 export const api = {
-  getDashboard: () => get<any>("/api/dashboard"),
-  getSector: (name: string) => get<any>(`/api/sectors/${name}`),
+  getDashboard:  () => get<any>("/api/dashboard"),
+  getSector:     (name: string) => get<any>(`/api/sectors/${name}`),
   generateBrief: (payload: any) => post<any>("/api/brief", payload),
-  chat: (payload: any) => post<any>("/api/chat", payload),
-  status: () => get<any>("/api/status"),
+  briefStatus:   () => get<any>("/api/brief/status"),
+  chat:          (payload: any) => post<any>("/api/chat", payload),
+  status:        () => get<any>("/api/status"),
 };
