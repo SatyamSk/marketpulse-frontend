@@ -13,19 +13,18 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
       <div
         className="fixed inset-0 z-0 opacity-20"
         style={{
-          backgroundImage: `url(${marketBg})`,
-          backgroundSize: "cover",
+          backgroundImage:  `url(${marketBg})`,
+          backgroundSize:   "cover",
           backgroundPosition: "center",
-          filter: "blur(40px)",
+          filter:           "blur(40px)",
         }}
       />
       <div className="fixed inset-0 z-0 bg-background/85" />
 
-      <div className="relative z-10 flex w-full">
+      <div className="relative z-10 flex w-full overflow-hidden">
         <AppSidebar />
-        <div className="flex-1 flex flex-col overflow-auto min-w-0">
-          {/* Mobile top padding so hamburger doesn't overlap content */}
-          <main className="flex-1 p-4 pt-16 lg:pt-6 lg:p-8">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <main className="flex-1 overflow-auto p-4 pt-16 lg:pt-6 lg:p-8">
             {children}
           </main>
           <DisclaimerFooter />
