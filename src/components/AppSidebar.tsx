@@ -2,6 +2,7 @@ import { Newspaper, BarChart3, Globe, MessageSquare, FlaskConical, Info, AlertTr
 import { NavLink } from "@/components/NavLink";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useState } from "react";
+import { Settings } from "lucide-react";
 
 const navItems = [
   { title: "Morning Brief",      url: "/",             icon: Newspaper    },
@@ -10,6 +11,7 @@ const navItems = [
   { title: "Sentiment Lab",      url: "/sentiment-lab",icon: FlaskConical },
   { title: "Ask AI",             url: "/ask-ai",       icon: MessageSquare},
   { title: "About",              url: "/about",        icon: Info         },
+  { title: "Pipeline", url: "/admin", icon: Settings },
 ];
 
 export function AppSidebar() {
