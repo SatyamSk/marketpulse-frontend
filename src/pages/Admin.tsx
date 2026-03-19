@@ -6,11 +6,11 @@ import {
   Clock, Database, Minus, Plus
 } from "lucide-react";
 
-const FEEDS = 15;
+const FEEDS = 37;
 
 export default function Admin() {
   const [secret, setSecret]               = useState("");
-  const [maxPerFeed, setMaxPerFeed]       = useState(8);
+  const [maxPerFeed, setMaxPerFeed]       = useState(12);
   const [running, setRunning]             = useState(false);
   const [message, setMessage]             = useState<string | null>(null);
   const [messageType, setMessageType]     = useState<"success" | "error" | "info">("info");
@@ -19,6 +19,7 @@ export default function Admin() {
   const pollRef                           = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const approxTotal = maxPerFeed * FEEDS;
+  const estMinutes  = Math.ceil(approxTotal / 15);
 
   const loadStatus = async (silent = false) => {
     if (!silent) setLoadingStatus(true);
@@ -34,7 +35,6 @@ export default function Admin() {
 
   useEffect(() => {
     loadStatus();
-    // Background refresh every 15s — silent so spinner doesn't flash
     const interval = setInterval(() => loadStatus(true), 15000);
     return () => {
       clearInterval(interval);
@@ -60,7 +60,6 @@ export default function Admin() {
     setMessage(null);
     stopPolling();
 
-    // Snapshot timestamp before triggering
     let prevTimestamp: string | null = null;
     let prevCount = 0;
     try {
@@ -71,11 +70,14 @@ export default function Admin() {
 
     try {
       const result = await api.triggerPipeline(secret, maxPerFeed);
-      setMessage(`Pipeline started — fetching ~${approxTotal} headlines. Checking every 5s...`);
+      setMessage(
+        result.message ??
+        `Pipeline started — fetching ~${approxTotal} headlines across ${FEEDS} sources. Checking every 5s...`
+      );
       setMessageType("info");
 
       let attempts = 0;
-      const maxAttempts = 60; // 5 minutes max
+      const maxAttempts = 72; // 6 minutes max for large pulls
 
       pollRef.current = setInterval(async () => {
         attempts++;
@@ -83,12 +85,13 @@ export default function Admin() {
           const s = await api.pipelineStatus();
           setStatus(s);
 
-          const timestampChanged = prevTimestamp !== null
-            && s.last_headlines_update !== null
-            && s.last_headlines_update !== prevTimestamp;
+          const timestampChanged =
+            prevTimestamp !== null &&
+            s.last_headlines_update !== null &&
+            s.last_headlines_update !== prevTimestamp;
 
-          const countChanged = s.headlines_count !== prevCount
-            && s.headlines_count > 0;
+          const countChanged =
+            s.headlines_count !== prevCount && s.headlines_count > 0;
 
           if (timestampChanged || (countChanged && !s.is_running)) {
             stopPolling();
@@ -104,7 +107,7 @@ export default function Admin() {
           if (!s.is_running && attempts > 6) {
             stopPolling();
             setRunning(false);
-            setMessage("Pipeline finished. Refresh to see updated status.");
+            setMessage("Pipeline finished. Click Refresh to see updated status.");
             setMessageType("success");
             return;
           }
@@ -113,7 +116,7 @@ export default function Admin() {
         if (attempts >= maxAttempts) {
           stopPolling();
           setRunning(false);
-          setMessage("Timed out. Pipeline may still be running — refresh manually.");
+          setMessage("Timed out. Pipeline may still be running — refresh manually in a minute.");
           setMessageType("info");
         }
       }, 5000);
@@ -122,8 +125,8 @@ export default function Admin() {
       const detail = err?.response?.data?.detail ?? err?.message ?? "";
       setMessage(
         typeof detail === "string" && detail.includes("Invalid secret")
-          ? "Wrong secret key."
-          : "Pipeline trigger failed — check API connection."
+          ? "Wrong secret key. Check your .env file."
+          : "Pipeline trigger failed — is api.py running?"
       );
       setMessageType("error");
       setRunning(false);
@@ -141,18 +144,17 @@ export default function Admin() {
   };
 
   const adjust = (delta: number) =>
-    setMaxPerFeed(prev => Math.max(3, Math.min(20, prev + delta)));
-
-  const estMinutes = Math.ceil(approxTotal / 15);
+    setMaxPerFeed(prev => Math.max(3, Math.min(50, prev + delta)));
 
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-5">
 
+        {/* Header */}
         <div className="fade-in">
           <h1 className="text-xl font-semibold text-foreground">Pipeline Control</h1>
           <p className="text-xs text-muted-foreground">
-            Manually fetch news and run full analysis
+            Manually fetch news and run full analysis across {FEEDS} sources
           </p>
         </div>
 
@@ -233,7 +235,7 @@ export default function Admin() {
           <h3 className="label-text mb-4">Run Pipeline</h3>
           <div className="space-y-4">
 
-            {/* Secret Key — no hint about default value */}
+            {/* Secret Key */}
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">
                 Secret key
@@ -253,7 +255,7 @@ export default function Admin() {
               </p>
             </div>
 
-            {/* News Count Slider */}
+            {/* News Count */}
             <div>
               <label className="text-xs text-muted-foreground mb-3 block">
                 Headlines to fetch per source
@@ -276,7 +278,7 @@ export default function Admin() {
                   </div>
                   <button
                     onClick={() => adjust(1)}
-                    disabled={maxPerFeed >= 20}
+                    disabled={maxPerFeed >= 50}
                     className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -287,18 +289,20 @@ export default function Admin() {
                   <input
                     type="range"
                     min={3}
-                    max={20}
+                    max={50}
                     value={maxPerFeed}
                     onChange={e => setMaxPerFeed(Number(e.target.value))}
                     className="w-full accent-primary cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-muted-foreground">
                     <span>3 · fast</span>
-                    <span>20 · thorough</span>
+                    <span>25 · standard</span>
+                    <span>50 · exhaustive</span>
                   </div>
                 </div>
               </div>
 
+              {/* Summary boxes */}
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {[
                   { label: "Per source", value: maxPerFeed   },
@@ -316,7 +320,6 @@ export default function Admin() {
                 ~{approxTotal} possible · deduplication reduces final count ·
                 ~{estMinutes} min run time · each headline = 1 AI call (~₹0.01) ·
                 est. cost ≈ ₹{(approxTotal * 0.01).toFixed(0)}
-
               </p>
             </div>
 
@@ -358,10 +361,22 @@ export default function Admin() {
           <h3 className="label-text mb-3">What the pipeline does</h3>
           <div className="space-y-2.5">
             {[
-              { n: "1", text: `Fetches up to ${approxTotal} headlines from ${FEEDS} sources — ET, Livemint, Business Standard, Moneycontrol, Financial Express, Inc42, Reuters India` },
-              { n: "2", text: "AI classifies each headline — sector, sentiment, impact, insight"       },
-              { n: "3", text: "Python calculates all scores — risk, NSS, CSI, z-score, BCG, Pareto"   },
-              { n: "4", text: "Saves CSVs · data persists until you run pipeline again"               },
+              {
+                n: "1",
+                text: `Fetches up to ${approxTotal} headlines from ${FEEDS} sources — ET, Livemint, BS, Moneycontrol, PIB, RBI, SEBI, Inc42, Reuters, BBC and more`,
+              },
+              {
+                n: "2",
+                text: "AI classifies each headline — sector, sentiment, impact, catalyst type, second-order beneficiaries, contrarian flags",
+              },
+              {
+                n: "3",
+                text: "Python calculates all scores — risk, NSS, CSI, z-score, BCG, Pareto, signal decay, momentum, Market Stress Index",
+              },
+              {
+                n: "4",
+                text: "Saves CSVs including govt/PIB headlines separately · dashboard updates on next refresh · data persists until next run",
+              },
             ].map(({ n, text }) => (
               <div key={n} className="flex items-start gap-3 text-xs text-secondary-foreground">
                 <span className="w-5 h-5 rounded-full bg-accent flex items-center justify-center shrink-0 text-[10px] font-semibold text-muted-foreground mt-0.5">
@@ -371,10 +386,29 @@ export default function Admin() {
               </div>
             ))}
           </div>
+
+          {/* Source breakdown */}
+          <div className="mt-4 pt-3 border-t border-border/40">
+            <p className="label-text mb-2">Sources included</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                "Economic Times", "Livemint", "Business Standard",
+                "Moneycontrol", "Financial Express", "Hindu BL",
+                "PIB", "RBI", "SEBI", "Inc42", "Entrackr",
+                "YourStory", "Mercom India", "Reuters India", "BBC Business",
+                "+ more",
+              ].map(s => (
+                <span key={s} className="tag bg-accent/60 text-muted-foreground">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+
           <div className="mt-3 pt-3 border-t border-border/40 space-y-1.5">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <Clock className="w-3 h-3" />
-              Status auto-refreshes every 15s silently in background
+              Status auto-refreshes every 15s silently · or click Refresh above
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <Database className="w-3 h-3" />
