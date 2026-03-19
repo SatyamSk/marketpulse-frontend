@@ -10,7 +10,7 @@ const FEEDS = 37;
 
 export default function Admin() {
   const [secret, setSecret]               = useState("");
-  const [maxPerFeed, setMaxPerFeed]       = useState(12);
+  const [maxPerFeed, setMaxPerFeed]       = useState(14);
   const [running, setRunning]             = useState(false);
   const [message, setMessage]             = useState<string | null>(null);
   const [messageType, setMessageType]     = useState<"success" | "error" | "info">("info");
@@ -296,8 +296,8 @@ export default function Admin() {
                   />
                   <div className="flex justify-between text-[10px] text-muted-foreground">
                     <span>3 · fast</span>
-                    <span>25 · standard</span>
-                    <span>50 · exhaustive</span>
+                    <span>14 · standard (~500)</span>
+                    <span>100 · exhaustive (~3700)</span>
                   </div>
                 </div>
               </div>
