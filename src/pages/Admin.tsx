@@ -6,7 +6,7 @@ import {
   Clock, Database, Minus, Plus
 } from "lucide-react";
 
-const FEEDS = 5;
+const FEEDS = 15;
 
 export default function Admin() {
   const [secret, setSecret]               = useState("");
@@ -313,9 +313,10 @@ export default function Admin() {
               </div>
 
               <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
-                ~{approxTotal} headlines · ~{estMinutes} min run time ·
-                Each headline = 1 AI call (~₹0.01) ·
-                Total cost ≈ ₹{(approxTotal * 0.01).toFixed(0)}
+                ~{approxTotal} possible · deduplication reduces final count ·
+                ~{estMinutes} min run time · each headline = 1 AI call (~₹0.01) ·
+                est. cost ≈ ₹{(approxTotal * 0.01).toFixed(0)}
+
               </p>
             </div>
 
@@ -357,7 +358,7 @@ export default function Admin() {
           <h3 className="label-text mb-3">What the pipeline does</h3>
           <div className="space-y-2.5">
             {[
-              { n: "1", text: `Fetches up to ${approxTotal} headlines from ${FEEDS} Indian RSS feeds` },
+              { n: "1", text: `Fetches up to ${approxTotal} headlines from ${FEEDS} sources — ET, Livemint, Business Standard, Moneycontrol, Financial Express, Inc42, Reuters India` },
               { n: "2", text: "AI classifies each headline — sector, sentiment, impact, insight"       },
               { n: "3", text: "Python calculates all scores — risk, NSS, CSI, z-score, BCG, Pareto"   },
               { n: "4", text: "Saves CSVs · data persists until you run pipeline again"               },
