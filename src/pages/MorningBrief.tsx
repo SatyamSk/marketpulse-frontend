@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   Newspaper, AlertTriangle, Globe, Sparkles,
   Activity, RefreshCw, Clock, ExternalLink,
-  ArrowUpDown, Zap, ChevronRight, BarChart3
+  ArrowUpDown, Zap, ChevronRight, BarChart3, Send
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard } from "@/components/MetricCard"; 
@@ -61,13 +61,31 @@ function ShockBadge({ status, zScore }: { status: string; zScore: number | null 
 
 export default function MorningBrief() {
   const { data, loading, error, refetch, lastFetch } = useDashboard();
+  
+  // Static Brief States
   const [brief, setBrief]                   = useState<string | null>(null);
   const [briefLoading, setBriefLoading]     = useState(false);
   const [briefUsed, setBriefUsed]           = useState(0);
   const [briefRemaining, setBriefRemaining] = useState(2);
+  
+  // Table Sorting States
   const [sortKey, setSortKey] = useState<SortKey>("impact_score");
   const [sortAsc, setSortAsc] = useState(false);
 
+  // 🤖 AI COPILOT CHAT STATES
+  const [query, setQuery] = useState("");
+  const [chat, setChat] = useState([
+    { role: "ai", text: "I've loaded the latest IST market data. Ask me to drill down into any sector, headline, or macro implication above." }
+  ]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat, aiLoading]);
+
+  // Fetch Brief Status
   useEffect(() => {
     if (api.briefStatus) {
       api.briefStatus()
@@ -106,6 +124,35 @@ export default function MorningBrief() {
     } finally {
       setBriefLoading(false);
     }
+  };
+
+  // 🤖 AI COPILOT SUBMIT LOGIC
+  const handleAskCopilot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim() || !data) return;
+
+    const userMsg = query;
+    setChat(prev => [...prev, { role: "user", text: userMsg }]);
+    setQuery("");
+    setAiLoading(true);
+
+    try {
+      const res = await fetch("https://marketpulse-ai-xkpg.onrender.com/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMsg,
+          history: chat.map(c => ({ role: c.role === 'ai' ? 'assistant' : 'user', content: c.text })),
+          context_headlines: data.headlines || [],
+          context_sectors: data.benchmark || []
+        })
+      });
+      const responseData = await res.json();
+      setChat(prev => [...prev, { role: "ai", text: responseData.answer }]);
+    } catch (error) {
+      setChat(prev => [...prev, { role: "ai", text: "Network error. The market is moving fast, and my servers are catching up. Try again." }]);
+    }
+    setAiLoading(false);
   };
 
   if (loading) return (
@@ -378,6 +425,75 @@ export default function MorningBrief() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* --- 🤖 GLASSMORPHISM AI COPILOT CHAT WIDGET --- */}
+        <div className="my-8 relative group fade-in" style={{ animationDelay: '0.35s' }}>
+          {/* Glowing Border Effect */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000"></div>
+          
+          <div className="relative bg-[#0d0d0d]/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col h-[400px] overflow-hidden">
+            
+            {/* Copilot Header */}
+            <div className="bg-white/[0.03] px-5 py-3 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]"></div>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  MarketPulse Copilot
+                </h3>
+              </div>
+              <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-mono bg-black/40 px-2 py-1 rounded-md border border-white/5">
+                Live Context Active
+              </span>
+            </div>
+
+            {/* Chat Messages Area */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+              {chat.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-blue-600/90 text-white rounded-2xl rounded-tr-sm' 
+                      : 'bg-white/5 text-gray-200 rounded-2xl rounded-tl-sm border border-white/10'
+                  }`}>
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+              
+              {aiLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-5 py-4 flex space-x-2">
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-75"></div>
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-150"></div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} className="h-2" />
+            </div>
+
+            {/* Input Form Area */}
+            <div className="p-3 bg-black/40 border-t border-white/10">
+              <form onSubmit={handleAskCopilot} className="relative flex items-center">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Ask about sector impacts, specific stocks, or macro implications..."
+                  className="w-full bg-white/5 border border-white/10 text-foreground text-[13px] rounded-full pl-5 pr-12 py-3 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder-muted-foreground"
+                  disabled={aiLoading}
+                />
+                <button 
+                  type="submit" 
+                  disabled={aiLoading || !query.trim()}
+                  className="absolute right-1.5 p-2 bg-blue-600 hover:bg-blue-500 disabled:bg-white/10 disabled:text-muted-foreground text-white rounded-full transition-all"
+                >
+                  <Send className="w-3.5 h-3.5 ml-px" />
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
 
         {/* --- HEADLINES DATA TABLE --- */}
