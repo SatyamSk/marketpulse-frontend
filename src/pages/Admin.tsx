@@ -135,13 +135,11 @@ export default function Admin() {
 
   const formatTime = (iso: string | null) => {
     if (!iso) return "Never";
-    const d    = new Date(iso);
+    // Strip "IST" or any timezone suffix that JS can't parse
+    const cleaned = iso.replace(/\s+IST$/, "").replace(" ", "T");
+    const d = new Date(cleaned);
+    if (isNaN(d.getTime())) return "—";
     const diff = Math.floor((Date.now() - d.getTime()) / 1000 / 60);
-    if (diff < 1)    return "Just now";
-    if (diff < 60)   return `${diff} min ago`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}h ${diff % 60}m ago`;
-    return d.toLocaleDateString("en-IN");
-  };
 
   const adjust = (delta: number) =>
     setMaxPerFeed(prev => Math.max(3, Math.min(50, prev + delta)));
@@ -190,9 +188,13 @@ export default function Admin() {
                   </p>
                   {status.last_headlines_update && (
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {new Date(status.last_headlines_update).toLocaleTimeString("en-IN", {
-                        hour: "2-digit", minute: "2-digit", second: "2-digit"
-                      })}
+                      {(() => {
+                        const cleaned = status.last_headlines_update.replace(/\s+IST$/, "").replace(" ", "T");
+                        const d = new Date(cleaned);
+                        return isNaN(d.getTime()) ? "—" : d.toLocaleTimeString("en-IN", {
+                          hour: "2-digit", minute: "2-digit", second: "2-digit"
+                        });
+                      })()}
                     </p>
                   )}
                 </div>
