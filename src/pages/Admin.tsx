@@ -3,10 +3,36 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { api } from "@/lib/api";
 import {
   Play, RefreshCw, CheckCircle, AlertCircle,
-  Clock, Database, Minus, Plus
+  Clock, Database, Minus, Plus, Zap
 } from "lucide-react";
 
-const FEEDS = 37;
+const FEEDS = 16;
+
+function parseDate(raw: string | null): Date | null {
+  if (!raw) return null;
+  // Strip "IST" or any non-standard timezone suffix JS can't parse
+  const cleaned = raw.replace(/\s+IST$/i, "").replace(" ", "T");
+  const d = new Date(cleaned);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatRelative(raw: string | null): string {
+  const d = parseDate(raw);
+  if (!d) return "Never";
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000 / 60);
+  if (diff < 1)    return "Just now";
+  if (diff < 60)   return `${diff} min ago`;
+  if (diff < 1440) return `${Math.floor(diff / 60)}h ${diff % 60}m ago`;
+  return d.toLocaleDateString("en-IN");
+}
+
+function formatTime(raw: string | null): string {
+  const d = parseDate(raw);
+  if (!d) return "—";
+  return d.toLocaleTimeString("en-IN", {
+    hour: "2-digit", minute: "2-digit", second: "2-digit"
+  });
+}
 
 export default function Admin() {
   const [secret, setSecret]               = useState("");
@@ -72,12 +98,12 @@ export default function Admin() {
       const result = await api.triggerPipeline(secret, maxPerFeed);
       setMessage(
         result.message ??
-        `Pipeline started — fetching ~${approxTotal} headlines across ${FEEDS} sources. Checking every 5s...`
+        `Pipeline started — fetching up to ~${approxTotal} headlines from last 48 hours. Polling every 5s...`
       );
       setMessageType("info");
 
       let attempts = 0;
-      const maxAttempts = 72; // 6 minutes max for large pulls
+      const maxAttempts = 180; // 15 minutes max
 
       pollRef.current = setInterval(async () => {
         attempts++;
@@ -97,17 +123,16 @@ export default function Admin() {
             stopPolling();
             setRunning(false);
             setMessage(
-              `Done. ${s.headlines_count} headlines loaded · ` +
-              `Last run: ${new Date(s.last_headlines_update).toLocaleTimeString("en-IN")}`
+              `Done. ${s.headlines_count} headlines fetched · Last run: ${formatTime(s.last_headlines_update)}`
             );
             setMessageType("success");
             return;
           }
 
-          if (!s.is_running && attempts > 6) {
+          if (!s.is_running && attempts > 8) {
             stopPolling();
             setRunning(false);
-            setMessage("Pipeline finished. Click Refresh to see updated status.");
+            setMessage("Pipeline finished. Refresh the dashboard to see updated data.");
             setMessageType("success");
             return;
           }
@@ -116,7 +141,7 @@ export default function Admin() {
         if (attempts >= maxAttempts) {
           stopPolling();
           setRunning(false);
-          setMessage("Timed out. Pipeline may still be running — refresh manually in a minute.");
+          setMessage("Timed out waiting. Pipeline may still be running — check Render logs.");
           setMessageType("info");
         }
       }, 5000);
@@ -124,29 +149,23 @@ export default function Admin() {
     } catch (err: any) {
       const detail = err?.response?.data?.detail ?? err?.message ?? "";
       setMessage(
-        typeof detail === "string" && detail.includes("Invalid secret")
-          ? "Wrong secret key. Check your .env file."
-          : "Pipeline trigger failed — is api.py running?"
+        typeof detail === "string" && detail.toLowerCase().includes("invalid secret")
+          ? "Wrong secret key."
+          : "Pipeline trigger failed — check if api.py is running."
       );
       setMessageType("error");
       setRunning(false);
     }
   };
 
-  const formatTime = (iso: string | null) => {
-    if (!iso) return "Never";
-    // Strip "IST" or any timezone suffix that JS can't parse
-    const cleaned = iso.replace(/\s+IST$/, "").replace(" ", "T");
-    const d = new Date(cleaned);
-    if (isNaN(d.getTime())) return "—";
-    const diff = Math.floor((Date.now() - d.getTime()) / 1000 / 60);
-
   const adjust = (delta: number) =>
     setMaxPerFeed(prev => Math.max(3, Math.min(50, prev + delta)));
 
+  const isActive = running || status?.is_running;
+
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="max-w-2xl mx-auto space-y-4">
 
         {/* Header */}
         <div className="fade-in">
@@ -171,9 +190,11 @@ export default function Admin() {
 
           {status ? (
             <div className="space-y-3">
-              {(running || status.is_running) && (
+
+              {/* Running indicator */}
+              {isActive && (
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
                   <span className="text-xs font-medium text-primary">
                     Pipeline running — polling every 5 seconds...
                   </span>
@@ -181,32 +202,27 @@ export default function Admin() {
               )}
 
               <div className="grid grid-cols-3 gap-3">
+                {/* Last run */}
                 <div className="bg-accent/30 rounded-lg p-3">
                   <p className="label-text mb-1">Last run</p>
                   <p className="text-sm font-semibold text-foreground">
+                    {formatRelative(status.last_headlines_update)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
                     {formatTime(status.last_headlines_update)}
                   </p>
-                  {status.last_headlines_update && (
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {(() => {
-                        const cleaned = status.last_headlines_update.replace(/\s+IST$/, "").replace(" ", "T");
-                        const d = new Date(cleaned);
-                        return isNaN(d.getTime()) ? "—" : d.toLocaleTimeString("en-IN", {
-                          hour: "2-digit", minute: "2-digit", second: "2-digit"
-                        });
-                      })()}
-                    </p>
-                  )}
                 </div>
+
+                {/* Headlines */}
                 <div className="bg-accent/30 rounded-lg p-3">
                   <p className="label-text mb-1">Headlines</p>
                   <p className="text-sm font-semibold text-foreground">
                     {status.headlines_count > 0 ? status.headlines_count : "—"}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    from last run
-                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">from last run</p>
                 </div>
+
+                {/* Data status */}
                 <div className="bg-accent/30 rounded-lg p-3">
                   <p className="label-text mb-1">Data</p>
                   {status.data_available ? (
@@ -246,18 +262,18 @@ export default function Admin() {
                 type="password"
                 value={secret}
                 onChange={e => setSecret(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && !running && triggerPipeline()}
+                onKeyDown={e => e.key === "Enter" && !isActive && triggerPipeline()}
                 placeholder="Enter pipeline secret key"
                 className="w-full px-4 py-2.5 rounded-xl bg-accent/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <p className="text-[10px] text-muted-foreground mt-1">
                 Set as{" "}
                 <code className="bg-accent px-1 rounded">PIPELINE_SECRET</code>
-                {" "}in your .env file
+                {" "}in your .env or Render environment variables
               </p>
             </div>
 
-            {/* News Count */}
+            {/* Headlines per feed */}
             <div>
               <label className="text-xs text-muted-foreground mb-3 block">
                 Headlines to fetch per source
@@ -292,14 +308,15 @@ export default function Admin() {
                     type="range"
                     min={3}
                     max={50}
+                    step={1}
                     value={maxPerFeed}
                     onChange={e => setMaxPerFeed(Number(e.target.value))}
                     className="w-full accent-primary cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-muted-foreground">
                     <span>3 · fast</span>
-                    <span>14 · standard (~500)</span>
-                    <span>100 · exhaustive (~3700)</span>
+                    <span>14 · standard</span>
+                    <span>50 · deep</span>
                   </div>
                 </div>
               </div>
@@ -307,9 +324,9 @@ export default function Admin() {
               {/* Summary boxes */}
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {[
-                  { label: "Per source", value: maxPerFeed   },
-                  { label: "Sources",    value: FEEDS         },
-                  { label: "~Total",     value: approxTotal   },
+                  { label: "Per source", value: maxPerFeed  },
+                  { label: "Sources",    value: FEEDS        },
+                  { label: "~Total",     value: approxTotal  },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-accent/30 rounded-lg p-2.5 text-center">
                     <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
@@ -319,19 +336,18 @@ export default function Admin() {
               </div>
 
               <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
-                ~{approxTotal} possible · deduplication reduces final count ·
-                ~{estMinutes} min run time · each headline = 1 AI call (~₹0.01) ·
-                est. cost ≈ ₹{(approxTotal * 0.01).toFixed(0)}
+                ~{approxTotal} possible · news from last 48 hours only · deduplication reduces final count ·
+                ~{estMinutes} min run time · est. cost ≈ ₹{(approxTotal * 0.01).toFixed(0)}
               </p>
             </div>
 
             {/* Run Button */}
             <button
               onClick={triggerPipeline}
-              disabled={running || status?.is_running}
+              disabled={isActive}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/85 transition-colors disabled:opacity-50"
             >
-              {running || status?.is_running ? (
+              {isActive ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
                   Running — fetching ~{approxTotal} headlines...
@@ -344,15 +360,19 @@ export default function Admin() {
               )}
             </button>
 
+            {/* Message */}
             {message && (
-              <div className={`p-3 rounded-xl border text-xs leading-relaxed ${
+              <div className={`flex items-start gap-2 p-3 rounded-xl border text-xs leading-relaxed ${
                 messageType === "success"
                   ? "bg-bullish/10 border-bullish/25 text-bullish"
                   : messageType === "error"
                   ? "bg-bearish/10 border-bearish/25 text-bearish"
                   : "bg-accent/50 border-border text-muted-foreground"
               }`}>
-                {message}
+                {messageType === "success" && <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
+                {messageType === "error"   && <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
+                {messageType === "info"    && <RefreshCw   className="w-3.5 h-3.5 shrink-0 mt-0.5 animate-spin" />}
+                <span>{message}</span>
               </div>
             )}
           </div>
@@ -365,19 +385,19 @@ export default function Admin() {
             {[
               {
                 n: "1",
-                text: `Fetches up to ${approxTotal} headlines from ${FEEDS} sources — ET, Livemint, BS, Moneycontrol, PIB, RBI, SEBI, Inc42, Reuters, BBC and more`,
+                text: `Fetches up to ~${approxTotal} headlines from ${FEEDS} sources including ET, Livemint, BS, Moneycontrol, PIB, RBI, SEBI, Reuters and more — last 48 hours only`,
               },
               {
                 n: "2",
-                text: "AI classifies each headline — sector, sentiment, impact, catalyst type, second-order beneficiaries, contrarian flags",
+                text: "AI classifies each headline — sector, sentiment, impact score, catalyst type, second-order beneficiaries, contrarian flags",
               },
               {
                 n: "3",
-                text: "Python calculates all scores — risk, NSS, CSI, z-score, BCG, Pareto, signal decay, momentum, Market Stress Index",
+                text: "Python calculates all scores — NSS, CSI, z-score, BCG classification, signal decay, momentum, Market Stress Index",
               },
               {
                 n: "4",
-                text: "Saves CSVs including govt/PIB headlines separately · dashboard updates on next refresh · data persists until next run",
+                text: "Pushes results to GitHub data repo — dashboard refreshes automatically on next page load",
               },
             ].map(({ n, text }) => (
               <div key={n} className="flex items-start gap-3 text-xs text-secondary-foreground">
@@ -389,16 +409,15 @@ export default function Admin() {
             ))}
           </div>
 
-          {/* Source breakdown */}
+          {/* Sources */}
           <div className="mt-4 pt-3 border-t border-border/40">
             <p className="label-text mb-2">Sources included</p>
             <div className="flex flex-wrap gap-1.5">
               {[
                 "Economic Times", "Livemint", "Business Standard",
-                "Moneycontrol", "Financial Express", "Hindu BL",
-                "PIB", "RBI", "SEBI", "Inc42", "Entrackr",
-                "YourStory", "Mercom India", "Reuters India", "BBC Business",
-                "+ more",
+                "Moneycontrol", "Financial Express",
+                "PIB", "RBI", "SEBI",
+                "Reuters India", "Inc42", "+ more",
               ].map(s => (
                 <span key={s} className="tag bg-accent/60 text-muted-foreground">
                   {s}
@@ -410,11 +429,15 @@ export default function Admin() {
           <div className="mt-3 pt-3 border-t border-border/40 space-y-1.5">
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <Clock className="w-3 h-3" />
-              Status auto-refreshes every 15s silently · or click Refresh above
+              Status auto-refreshes every 15s · or click Refresh above
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Zap className="w-3 h-3" />
+              Sentiment velocity updates automatically on each run
             </div>
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
               <Database className="w-3 h-3" />
-              Data stays fixed until you manually run the pipeline again
+              Data persists in GitHub — survives server restarts
             </div>
           </div>
         </div>
