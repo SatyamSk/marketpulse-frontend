@@ -10,11 +10,8 @@ interface DashboardContextType {
 }
 
 const DashboardContext = createContext<DashboardContextType>({
-  data:      null,
-  loading:   true,
-  error:     null,
-  refetch:   async () => {},
-  lastFetch: null,
+  data: null, loading: true, error: null,
+  refetch: async () => {}, lastFetch: null,
 });
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
@@ -31,11 +28,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       setData(result);
       setLastFetch(new Date());
     } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Cannot connect to pipeline. Make sure api.py is running."
-      );
+      setError(e instanceof Error ? e.message : "Cannot connect to pipeline.");
     } finally {
       setLoading(false);
     }
@@ -43,7 +36,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchData();
-    // Refresh every 10 minutes — only one call for entire app
     const interval = setInterval(fetchData, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchData]);
