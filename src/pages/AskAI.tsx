@@ -70,7 +70,7 @@ export default function AskAI() {
   const cooldownMinsRem = cooldownMins % 60;
 
   const send = async (msg: string) => {
-    if (!msg.trim() || !data || inCooldown || isOverLimit) return;
+    if (!msg.trim() || inCooldown || isOverLimit) return;
 
     setShowSuggestions(false);
     setMessages(prev => [...prev, { role: "user", content: msg }]);
@@ -85,9 +85,9 @@ export default function AskAI() {
       const result = await api.chat({
         message:           msg,
         history,
-        context_headlines: data.headlines,
-        context_sectors:   data.benchmark,
-      });
+        context_headlines: data?.headlines ?? [],
+        context_sectors:   data?.benchmark ?? [],
+      });;
 
       const newWords = result.words_used ?? sessionWords + currentWords;
       setSessionWords(newWords);
@@ -319,7 +319,7 @@ export default function AskAI() {
                 wordsLeft === 0 ? "Word limit reached..." :
                                   "Ask anything about today's market..."
               }
-              disabled={isTyping || !data || inCooldown || wordsLeft === 0}
+              disabled={isTyping || inCooldown || wordsLeft === 0}
               className="flex-1 px-4 sm:px-5 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-accent/40 border border-border text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 transition-colors shadow-inner"
               style={{
                 borderColor: isOverLimit ? "rgba(239,68,68,0.6)" : undefined,
