@@ -112,7 +112,7 @@ export default function MorningBrief() {
 
   if (error) return (
     <DashboardLayout>
-      <div className="glass-card p-6 max-w-lg">
+      <div className="glass-card p-6 max-w-lg mx-auto mt-10">
         <p className="text-bearish font-semibold mb-2">Pipeline not connected</p>
         <p className="text-sm text-muted-foreground mb-3">{error}</p>
         <code className="text-xs bg-accent px-2 py-1 rounded">python api.py</code>
@@ -147,19 +147,41 @@ export default function MorningBrief() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto space-y-4">
+      {/* w-full and responsive max-widths allow it to stretch nicely on PC */}
+      <div className="w-full xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto space-y-4 sm:space-y-6">
 
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-2 fade-in">
+        {/* --- CREATIVE BRANDING HEADER --- */}
+        <div className="fade-in">
+          <div className="glass-card p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 bg-gradient-to-r from-background to-accent/10 border-border/40">
+            <div className="flex items-center gap-2.5">
+              <div className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+              </div>
+              <span className="text-[11px] sm:text-xs font-semibold text-muted-foreground tracking-widest uppercase">Live Intelligence Pipeline</span>
+            </div>
+            <div className="text-xs sm:text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+              <span>Built by</span>
+              <span className="font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 text-sm sm:text-base">
+                Satyam
+              </span>
+              <span className="opacity-40 hidden sm:inline">|</span>
+              <span className="font-medium text-foreground/70">PGDM IMI Delhi</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Header & Refresh */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 fade-in">
           <div>
-            <h1 className="text-xl font-semibold text-foreground">Market Outlook</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-2xl font-semibold text-foreground">Market Outlook</h1>
+            <p className="text-sm text-muted-foreground mt-1">
               Expected conditions for{" "}
-              {new Date().toLocaleDateString("en-IN", {
-                weekday: "long", day: "numeric", month: "long",
-              })}
+              <span className="font-medium text-foreground/80">
+                {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+              </span>
               {lastFetch && (
-                <span className="ml-2 opacity-50">
+                <span className="ml-2 opacity-50 text-xs">
                   · updated {lastFetch.toLocaleTimeString()}
                 </span>
               )}
@@ -167,101 +189,65 @@ export default function MorningBrief() {
           </div>
           <button
             onClick={refetch}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm bg-accent/50 text-foreground hover:bg-accent transition-colors w-full sm:w-auto"
           >
-            <RefreshCw className="w-3.5 h-3.5" /> Refresh
+            <RefreshCw className="w-4 h-4" /> Refresh Data
           </button>
         </div>
 
         {/* Metric Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 fade-in">
-          <MetricCard
-            label="Headlines"
-            value={summary_stats.total_headlines}
-            icon={<Newspaper className="w-4 h-4" />}
-          />
-          <MetricCard
-            label="Top Risk Sector"
-            value={topRisk?.sector ?? "—"}
-            icon={<AlertTriangle className="w-4 h-4" />}
-            colorClass="text-bearish"
-          />
-          <MetricCard
-            label="Expected Regime"
-            value={market_regime.regime}
-            icon={<Activity className="w-4 h-4" />}
-            colorClass={regimeColor}
-          />
-          <MetricCard
-            label="Shock Events"
-            value={totalShocks}
-            icon={<Zap className="w-4 h-4" />}
-            colorClass={totalShocks > 0 ? "text-warning" : "text-muted-foreground"}
-          />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 fade-in">
+          <MetricCard label="Headlines Analyzed" value={summary_stats.total_headlines} icon={<Newspaper className="w-4 h-4" />} />
+          <MetricCard label="Highest Risk Sector" value={topRisk?.sector ?? "—"} icon={<AlertTriangle className="w-4 h-4" />} colorClass="text-bearish" />
+          <MetricCard label="Expected Regime" value={market_regime.regime} icon={<Activity className="w-4 h-4" />} colorClass={regimeColor} />
+          <MetricCard label="Shock Events" value={totalShocks} icon={<Zap className="w-4 h-4" />} colorClass={totalShocks > 0 ? "text-warning" : "text-muted-foreground"} />
         </div>
 
         {/* Regime + Pareto */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 fade-in">
-
-          <div className={`glass-card p-5 border ${regimeBorder}`}>
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className={`text-base font-semibold ${regimeColor}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 fade-in">
+          <div className={`glass-card p-5 sm:p-6 border ${regimeBorder} flex flex-col justify-center`}>
+            <div className="flex items-center gap-3 mb-3 flex-wrap">
+              <span className={`text-lg sm:text-xl font-bold ${regimeColor}`}>
                 {market_regime.regime}
               </span>
-              <span className="tag bg-accent text-muted-foreground">Expected Regime</span>
-              <span className="text-[10px] text-muted-foreground">
-                · {summary_stats.total_headlines} headlines
-              </span>
+              <span className="tag bg-accent text-muted-foreground text-xs">Expected Regime</span>
             </div>
-            <p className="text-xs text-secondary-foreground mb-4 leading-relaxed">
+            <p className="text-sm text-secondary-foreground mb-6 leading-relaxed">
               {market_regime.description}
             </p>
-            <div className="space-y-2.5">
+            <div className="space-y-3.5">
               {[
                 { label: "Watch",  value: market_regime.watch            },
                 { label: "Avoid",  value: market_regime.avoid            },
                 { label: "Nifty",  value: market_regime.nifty_implication },
               ].map(({ label, value }) => (
-                <div key={label} className="flex gap-2.5 text-xs">
-                  <span className="label-text shrink-0 pt-0.5 w-10">{label}</span>
+                <div key={label} className="flex flex-col sm:flex-row sm:gap-3 text-sm">
+                  <span className="label-text shrink-0 sm:pt-0.5 sm:w-12 mb-1 sm:mb-0">{label}</span>
                   <span className="text-secondary-foreground leading-relaxed">{value}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="glass-card p-4">
-            <h3 className="label-text mb-0.5">Pareto Risk Concentration</h3>
-            <p className="text-[10px] text-muted-foreground mb-3">
+          <div className="glass-card p-4 sm:p-6">
+            <h3 className="label-text mb-1">Pareto Risk Concentration</h3>
+            <p className="text-xs text-muted-foreground mb-4">
               Top sectors driving 80% of expected market risk
             </p>
-            <ResponsiveContainer width="100%" height={180}>
-              <ComposedChart data={pareto} margin={{ top: 4, right: 28, bottom: 0, left: 0 }}>
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart data={pareto} margin={{ top: 4, right: 28, bottom: 0, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis
-                  dataKey="sector"
-                  tick={{ fill: "#64748b", fontSize: 9 }}
-                  interval={0}
-                  angle={-30}
-                  textAnchor="end"
-                  height={36}
-                />
-                <YAxis yAxisId="l" tick={{ fill: "#64748b", fontSize: 9 }} width={24} />
-                <YAxis yAxisId="r" orientation="right" domain={[0, 100]}
-                  tick={{ fill: "#64748b", fontSize: 9 }} width={24} />
+                <XAxis dataKey="sector" tick={{ fill: "#64748b", fontSize: 10 }} interval={0} angle={-30} textAnchor="end" height={40} />
+                <YAxis yAxisId="l" tick={{ fill: "#64748b", fontSize: 10 }} width={30} />
+                <YAxis yAxisId="r" orientation="right" domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 10 }} width={30} />
                 <Tooltip contentStyle={TT} />
-                <ReferenceLine yAxisId="r" y={80} stroke="#f59e0b" strokeDasharray="4 4"
-                  label={{ value: "80%", fill: "#f59e0b", fontSize: 9, position: "insideRight" }} />
-                <Bar yAxisId="l" dataKey="avg_weighted_risk" radius={[2, 2, 0, 0]}>
+                <ReferenceLine yAxisId="r" y={80} stroke="#f59e0b" strokeDasharray="4 4" label={{ value: "80%", fill: "#f59e0b", fontSize: 10, position: "insideRight" }} />
+                <Bar yAxisId="l" dataKey="avg_weighted_risk" radius={[3, 3, 0, 0]} maxBarSize={60}>
                   {pareto.map((e: any, i: number) => (
-                    <Cell key={i}
-                      fill={e.cumulative_pct <= 80 ? "#ef4444" :
-                            e.avg_weighted_risk > 10 ? "#f59e0b" : "#22c55e"} />
+                    <Cell key={i} fill={e.cumulative_pct <= 80 ? "#ef4444" : e.avg_weighted_risk > 10 ? "#f59e0b" : "#22c55e"} />
                   ))}
                 </Bar>
-                <Line yAxisId="r" type="monotone" dataKey="cumulative_pct"
-                  stroke="#60a5fa" strokeWidth={1.5}
-                  dot={{ r: 2.5, fill: "#60a5fa" }} />
+                <Line yAxisId="r" type="monotone" dataKey="cumulative_pct" stroke="#60a5fa" strokeWidth={2} dot={{ r: 3, fill: "#60a5fa" }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -269,25 +255,22 @@ export default function MorningBrief() {
 
         {/* Shock Summary */}
         {totalShocks > 0 && (
-          <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-xl border border-warning/25 bg-warning/5 fade-in">
-            <Zap className="w-4 h-4 text-warning shrink-0" />
-            <span className="text-xs font-semibold text-warning">
-              {totalShocks} statistical shock event{totalShocks > 1 ? "s" : ""} detected today
-            </span>
-            <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-warning/25 bg-warning/5 fade-in">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-warning shrink-0" />
+              <span className="text-sm font-semibold text-warning">
+                {totalShocks} statistical shock event{totalShocks > 1 ? "s" : ""} detected today
+              </span>
+            </div>
+            <div className="flex gap-2 flex-wrap sm:ml-auto">
               {(shock_counts?.major ?? 0) > 0 && (
-                <span className="tag bg-bearish/15 text-bearish">
+                <span className="tag bg-bearish/15 text-bearish text-xs px-2.5 py-1">
                   {shock_counts.major} major shock{shock_counts.major > 1 ? "s" : ""}
                 </span>
               )}
               {(shock_counts?.shock ?? 0) > 0 && (
-                <span className="tag bg-warning/15 text-warning">
+                <span className="tag bg-warning/15 text-warning text-xs px-2.5 py-1">
                   {shock_counts.shock} shock{shock_counts.shock > 1 ? "s" : ""}
-                </span>
-              )}
-              {(shock_counts?.watch ?? 0) > 0 && (
-                <span className="tag bg-primary/15 text-primary">
-                  {shock_counts.watch} watch
                 </span>
               )}
             </div>
@@ -296,49 +279,43 @@ export default function MorningBrief() {
 
         {/* Brief Generator */}
         <div className="fade-in">
-          <div className="flex flex-wrap items-center gap-3 mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <button
               onClick={generateBrief}
               disabled={briefLoading || briefRemaining <= 0}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/85 transition-colors disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-all disabled:opacity-50 w-full sm:w-auto shadow-lg shadow-primary/20"
             >
               <Sparkles className="w-4 h-4" />
-              {briefLoading ? "Generating..." :
-               brief ? "Regenerate Outlook" : "Generate Expected Market Outlook"}
+              {briefLoading ? "Analyzing Data & Generating..." : brief ? "Regenerate Outlook" : "Generate Expected Market Outlook"}
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center sm:justify-end gap-2">
               {[0, 1].map(i => (
-                <div key={i} className={`w-5 h-1.5 rounded-full transition-colors ${
-                  i < briefUsed ? "bg-primary" : "bg-accent border border-border"
-                }`} />
+                <div key={i} className={`w-6 h-1.5 rounded-full transition-colors ${i < briefUsed ? "bg-primary" : "bg-accent border border-border"}`} />
               ))}
-              <span className="text-[11px] text-muted-foreground">
-                {briefRemaining}/2 today
+              <span className="text-xs text-muted-foreground ml-1">
+                {briefRemaining}/2 runs today
               </span>
-              {briefRemaining === 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Clock className="w-3 h-3" /> resets midnight
-                </span>
-              )}
             </div>
           </div>
 
           {brief && (
             <div className="glass-card overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/60 bg-accent/20">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <span className="label-text">Expected Market Outlook</span>
-                <span className="ml-auto text-[10px] text-muted-foreground">
-                  {summary_stats.total_headlines} headlines · Python-scored · AI-narrated
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-5 py-3.5 border-b border-border/60 bg-accent/20">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="label-text text-sm">Expected Market Outlook</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  Python-scored · AI-narrated
                 </span>
               </div>
-              <div className="p-5">
+              <div className="p-5 sm:p-6">
                 <div className="
-                  prose prose-sm prose-invert max-w-none text-secondary-foreground
-                  [&_h2]:text-foreground [&_h2]:text-sm [&_h2]:font-semibold
-                  [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-border/40 [&_h2]:pb-1
-                  [&_p]:text-[13px] [&_p]:leading-relaxed
-                  [&_ul]:text-[13px] [&_li]:leading-relaxed [&_li]:mb-1
+                  prose prose-sm sm:prose-base prose-invert max-w-none text-secondary-foreground
+                  [&_h2]:text-foreground [&_h2]:text-lg [&_h2]:font-semibold
+                  [&_h2]:mt-6 [&_h2]:mb-3 [&_h2]:border-b [&_h2]:border-border/40 [&_h2]:pb-2
+                  [&_p]:leading-relaxed
+                  [&_ul]:leading-relaxed [&_li]:mb-1.5
                   [&_strong]:text-foreground [&_strong]:font-semibold
                 ">
                   <ReactMarkdown>{brief}</ReactMarkdown>
@@ -348,32 +325,24 @@ export default function MorningBrief() {
           )}
         </div>
 
-        {/* Headlines Table — fixed height scrollable */}
+        {/* Headlines Table */}
         <div className="glass-card overflow-hidden fade-in">
-          <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+          <div className="px-4 sm:px-5 py-4 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h3 className="label-text">Headlines by impact</h3>
+              <h3 className="label-text text-sm">Headlines by Impact</h3>
               <span className="tag bg-accent/60 text-muted-foreground">
                 {headlines.length} total
               </span>
-              {totalShocks > 0 && (
-                <span className="tag bg-warning/15 text-warning">
-                  {totalShocks} shocks
-                </span>
-              )}
             </div>
-            <span className="text-[10px] text-muted-foreground hidden sm:block">
-              Click source icon to open article
+            <span className="text-xs text-muted-foreground hidden sm:block">
+              Click source icon to open original article
             </span>
           </div>
 
           <div className="overflow-x-auto">
-            <div style={{ maxHeight: "420px", overflowY: "auto" }}>
+            <div className="min-w-[800px] max-h-[500px] overflow-y-auto">
               <table className="w-full">
-                <thead
-                  className="sticky top-0 z-10"
-                  style={{ background: "hsl(228 18% 10%)" }}
-                >
+                <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
                   <tr className="border-b border-border/60">
                     {[
                       { key: "title",        label: "Headline"  },
@@ -386,12 +355,12 @@ export default function MorningBrief() {
                     ].map(({ key, label }) => (
                       <th
                         key={label + (key ?? "")}
-                        className="text-left px-3 py-2.5 label-text cursor-pointer whitespace-nowrap"
+                        className="text-left px-4 py-3 label-text text-xs cursor-pointer whitespace-nowrap bg-accent/10"
                         onClick={() => key && handleSort(key as SortKey)}
                       >
-                        <span className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center gap-1.5">
                           {label}
-                          {key && <ArrowUpDown className="w-2.5 h-2.5 opacity-40" />}
+                          {key && <ArrowUpDown className="w-3 h-3 opacity-40" />}
                         </span>
                       </th>
                     ))}
@@ -404,56 +373,36 @@ export default function MorningBrief() {
                     return (
                       <tr
                         key={i}
-                        className={`border-b border-border/25 hover:bg-accent/20 transition-colors ${
-                          shockStatus === "Major Shock"
-                            ? "shadow-[inset_3px_0_0_#ef4444]"
-                            : shockStatus === "Shock"
-                            ? "shadow-[inset_3px_0_0_#f59e0b]"
-                            : shockStatus === "Watch"
-                            ? "shadow-[inset_3px_0_0_#6366f1]"
-                            : ""
+                        className={`border-b border-border/25 hover:bg-accent/30 transition-colors ${
+                          shockStatus === "Major Shock" ? "bg-bearish/5" : shockStatus === "Shock" ? "bg-warning/5" : ""
                         }`}
                       >
-                        <td className="px-3 py-2.5 max-w-[160px] lg:max-w-xs">
-                          <span className="line-clamp-2 text-xs text-foreground leading-relaxed">
+                        <td className="px-4 py-3 max-w-[200px] lg:max-w-[300px]">
+                          <span className="line-clamp-2 text-sm text-foreground leading-relaxed">
                             {h.title}
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          <span className="tag bg-accent text-muted-foreground">
-                            {h.sector}
-                          </span>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className="tag bg-accent text-muted-foreground">{h.sector}</span>
                         </td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-4 py-3">
                           <SentimentBadge sentiment={h.sentiment} />
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          <span className={`font-semibold text-xs ${
-                            h.impact_score >= 8 ? "text-bearish" :
-                            h.impact_score >= 6 ? "text-warning" : "text-muted-foreground"
-                          }`}>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`font-semibold text-sm ${h.impact_score >= 8 ? "text-bearish" : h.impact_score >= 6 ? "text-warning" : "text-muted-foreground"}`}>
                             {h.impact_score}/10
                           </span>
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          <ShockBadge
-                            status={shockStatus}
-                            zScore={h.z_score != null ? Number(h.z_score) : null}
-                          />
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <ShockBadge status={shockStatus} zScore={h.z_score != null ? Number(h.z_score) : null} />
                         </td>
-                        <td className="px-3 py-2.5 text-muted-foreground text-[11px] max-w-[160px] lg:max-w-sm leading-relaxed">
+                        <td className="px-4 py-3 text-muted-foreground text-xs max-w-[200px] lg:max-w-md leading-relaxed">
                           {h.one_line_insight}
                         </td>
-                        <td className="px-3 py-2.5">
+                        <td className="px-4 py-3 text-right">
                           {sourceUrl && (
-                            <a 
-                              href={sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
-                              title="Open source"
-                            >
-                              <ExternalLink className="w-3 h-3" />
+                            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:text-primary hover:bg-accent transition-colors" title="Open source">
+                              <ExternalLink className="w-3.5 h-3.5" />
                             </a>
                           )}
                         </td>
@@ -462,27 +411,6 @@ export default function MorningBrief() {
                   })}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
-
-        {/* --- CREATIVE BRANDING FOOTER --- */}
-        <div className="pt-4 pb-2 fade-in">
-          <div className="glass-card p-4 flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-background to-accent/10 border-border/40 hover:border-primary/20 transition-colors">
-            <div className="flex items-center gap-2">
-              <div className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </div>
-              <span className="text-[10px] font-semibold text-muted-foreground tracking-widest uppercase">Live Intelligence Pipeline</span>
-            </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <span>Designed & Built by</span>
-              <span className="font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-                Satyam
-              </span>
-              <span className="opacity-40">|</span>
-              <span className="font-medium text-foreground/70">PGDM IMI Delhi</span>
             </div>
           </div>
         </div>
