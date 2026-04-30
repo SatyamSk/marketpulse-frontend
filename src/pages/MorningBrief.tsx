@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { SentimentBadge } from "@/components/SentimentBadge";
+import { AgentThinkingSheet } from "@/components/AgentThinkingSheet";
 import { useDashboard } from "@/hooks/useDashboard";
 import { api } from "@/lib/api";
 import {
@@ -131,6 +132,9 @@ export default function MorningBrief() {
 
   const { market_regime, benchmark, headlines, pareto, summary_stats, shock_counts, market_stress_index } = data;
 
+  // Friendly empty state (backend returns a valid empty payload until first run)
+  const hasAnyData = (summary_stats?.total_headlines ?? 0) > 0;
+
   const sorted = [...headlines].sort((a: any, b: any) => {
     const av = a[sortKey] ?? 0, bv = b[sortKey] ?? 0;
     return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
@@ -200,12 +204,35 @@ export default function MorningBrief() {
                 </div>
               </div>
             </div>
-            <button onClick={refetch} className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-xs text-foreground/80 hover:text-foreground">
-              <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
-              Sync Pipeline
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button onClick={refetch} className="flex-1 sm:flex-none group flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-xs text-foreground/80 hover:text-foreground">
+                <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
+                Sync
+              </button>
+              <div className="flex-1 sm:flex-none">
+                <AgentThinkingSheet />
+              </div>
+            </div>
           </div>
         </div>
+
+        {!hasAnyData && (
+          <div className="glass-card p-5 border border-warning/20 bg-warning/5 fade-in">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">No pipeline run detected yet</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  The dashboard is live, but there’s no scored data yet. Run <span className="font-semibold text-foreground">Admin → Run Agent Intelligence</span> once,
+                  or enable the daily scheduled run in GitHub Actions for fully automatic operation.
+                </p>
+                <a href="/admin" className="inline-flex text-xs font-semibold text-primary hover:underline">
+                  Go to Admin
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TOP METRICS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 fade-in">
