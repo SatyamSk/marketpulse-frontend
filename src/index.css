@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,33 +6,68 @@
 
 @layer base {
   :root {
-    --background:             228 20% 4%;
-    --foreground:             220 15% 94%;
-    --card:                   228 18% 8%;
-    --card-foreground:        220 15% 94%;
-    --popover:                228 18% 8%;
-    --popover-foreground:     220 15% 94%;
-    --primary:                160 60% 42%;
-    --primary-foreground:     0 0% 100%;
-    --secondary:              228 14% 13%;
-    --secondary-foreground:   220 12% 80%;
-    --muted:                  228 14% 13%;
-    --muted-foreground:       220 8% 52%;
-    --accent:                 228 14% 16%;
-    --accent-foreground:      220 15% 94%;
-    --destructive:            4 80% 56%;
+    /* ── Obsidian Dark — Psychology-informed palette ──
+       Not pure black (#000). Blue-undertone obsidian reduces
+       text halation and feels more premium than flat black.
+       Bloomberg uses similar: dark with blue tint. */
+    --background: 222 18% 4%;        /* #0B0D11 Obsidian */
+    --foreground: 216 20% 93%;       /* #E8ECF1 Off-white (softer than pure white) */
+    
+    --card: 222 16% 7%;              /* #12141A Elevated surface */
+    --card-foreground: 216 20% 95%;
+    
+    --popover: 222 18% 6%;
+    --popover-foreground: 216 20% 95%;
+    
+    /* Electric Indigo — Trust, intelligence, action */
+    --primary: 239 84% 67%;          /* #6366F1 */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 222 14% 10%;
+    --secondary-foreground: 216 20% 93%;
+    
+    --muted: 222 14% 12%;
+    --muted-foreground: 225 14% 58%; /* #8B93A7 Muted lavender-gray */
+    
+    --accent: 239 84% 67%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Coral Rose — Danger without anxiety */
+    --destructive: 350 89% 60%;      /* #F43F5E */
     --destructive-foreground: 0 0% 100%;
-    --warning:                40 90% 52%;
-    --warning-foreground:     0 0% 100%;
-    --bullish:                152 58% 40%;
-    --bearish:                4 80% 58%;
-    --border:                 228 14% 14%;
-    --input:                  228 14% 14%;
-    --ring:                   160 60% 42%;
-    --radius:                 0.625rem;
-    --sidebar-background:     228 22% 5%;
-    --sidebar-foreground:     220 12% 80%;
-    --sidebar-border:         228 14% 12%;
+    
+    /* Warm Amber — Universal caution */
+    --warning: 38 92% 50%;           /* #F59E0B */
+    --warning-foreground: 0 0% 10%;
+    
+    /* Emerald — Growth, go-ahead (blue-shifted for CVD accessibility) */
+    --bullish: 160 84% 39%;          /* #10B981 */
+    /* Coral Rose — Stop signal */
+    --bearish: 350 89% 60%;          /* #F43F5E */
+    
+    /* Vivid Orange — Shock/Critical urgency */
+    --shock: 25 95% 53%;             /* #F97316 */
+    
+    --border: 222 14% 12%;           /* #1E2028 */
+    --input: 222 14% 12%;
+    --ring: 239 84% 67%;
+    --radius: 0.875rem;
+    
+    --sidebar-background: 222 18% 4%;
+    --sidebar-foreground: 225 14% 75%;
+    --sidebar-border: 222 14% 10%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 239 84% 67%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-ring: 239 84% 67%;
+
+    /* Chart palette — Harmonious, distinguishable */
+    --chart-1: 239 84% 67%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 350 89% 60%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 25 95% 53%;
   }
 }
 
@@ -40,57 +75,125 @@
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 14px;
     line-height: 1.6;
+    letter-spacing: -0.015em;
   }
-  code, .font-mono { font-family: 'DM Mono', monospace; }
+  code, .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  html { scroll-behavior: smooth; }
 }
 
 @layer utilities {
+  /* ── Glass Card — Premium elevated surface ── */
   .glass-card {
-    background: hsl(228 18% 9% / 0.85);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.065);
-    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(18,20,26,0.85) 0%, rgba(11,13,17,0.95) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.875rem;
+    box-shadow: 0 2px 16px -2px rgba(0, 0, 0, 0.4);
   }
+  
   .glass-card-hover {
-    @apply glass-card transition-all duration-200;
+    @apply glass-card transition-all duration-300 ease-out;
   }
   .glass-card-hover:hover {
-    border-color: rgba(255,255,255,0.11);
-    background: hsl(228 18% 10% / 0.9);
+    border-color: rgba(99, 102, 241, 0.15);
+    background: linear-gradient(180deg, rgba(22,24,32,0.9) 0%, rgba(14,16,22,0.98) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.06);
   }
+  
+  /* ── Labels ── */
   .label-text {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.625rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: hsl(var(--muted-foreground));
   }
+  
+  /* ── Tags ── */
   .tag {
     display: inline-flex;
     align-items: center;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.675rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
   }
-  .fade-in { animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+  .tag:hover { background: rgba(255, 255, 255, 0.06); }
+  
+  /* ── Metric Glow Effects ── */
+  .metric-glow-bullish {
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+  .metric-glow-bearish {
+    box-shadow: 0 0 24px rgba(244, 63, 94, 0.08);
+    border-color: rgba(244, 63, 94, 0.2);
+  }
+  .metric-glow-primary {
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.2);
+  }
+  
+  /* ── Shock Pulse Animation ── */
+  .shock-pulse {
+    animation: shockPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* ── Regime Badge Glow ── */
+  .regime-risk-on { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: hsl(var(--bullish)); }
+  .regime-risk-off { background: rgba(139, 147, 167, 0.1); border: 1px solid rgba(139, 147, 167, 0.25); color: hsl(var(--muted-foreground)); }
+  .regime-complacent { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: hsl(var(--warning)); }
+  .regime-panic { background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.25); color: hsl(var(--bearish)); }
+  
+  /* ── Skeleton Loading ── */
+  .skeleton {
+    background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(222 14% 16%) 50%, hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+    border-radius: 0.5rem;
+  }
+  
+  /* ── Data Freshness Badge ── */
+  .freshness-live { color: hsl(var(--bullish)); }
+  .freshness-stale { color: hsl(var(--warning)); }
+  .freshness-old { color: hsl(var(--bearish)); }
+  
+  /* ── Staggered Entrances ── */
+  .fade-in { animation: subtleFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
   .fade-in-delay-1 { animation-delay: 0.08s; }
   .fade-in-delay-2 { animation-delay: 0.16s; }
   .fade-in-delay-3 { animation-delay: 0.24s; }
   .fade-in-delay-4 { animation-delay: 0.32s; }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0);   }
+@keyframes subtleFadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.995); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
 }
 
-::-webkit-scrollbar       { width: 4px; height: 4px; }
+@keyframes shockPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+@keyframes skeletonPulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: hsl(228 14% 22%); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(228 14% 30%); }
+::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.3); }

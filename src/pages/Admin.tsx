@@ -42,6 +42,8 @@ export default function Admin() {
   const [messageType, setMessageType]     = useState<"success" | "error" | "info">("info");
   const [status, setStatus]               = useState<any>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
+  const [adminToken, setAdminToken]       = useState<string | null>(null);
+  const [authError, setAuthError]         = useState<string | null>(null);
   const pollRef                           = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const approxTotal = maxPerFeed * FEEDS;
@@ -75,9 +77,22 @@ export default function Admin() {
     }
   };
 
+  const handleLogin = async () => {
+    if (!secret.trim()) { setAuthError("Enter the admin password."); return; }
+    setAuthError(null);
+    try {
+      const res = await api.adminLogin(secret);
+      setAdminToken(res.token);
+      setMessage("Authenticated successfully.");
+      setMessageType("success");
+    } catch (e: any) {
+      setAuthError(e?.message || "Invalid credentials.");
+    }
+  };
+
   const triggerPipeline = async () => {
-    if (!secret.trim()) {
-      setMessage("Enter your pipeline secret key first.");
+    if (!adminToken) {
+      setMessage("Login first to run the pipeline.");
       setMessageType("error");
       return;
     }
@@ -95,7 +110,7 @@ export default function Admin() {
     } catch {}
 
     try {
-      const result = await api.triggerPipeline(secret, maxPerFeed);
+      const result = await api.triggerPipeline(secret, maxPerFeed, adminToken);
       setMessage(
         result.message ??
         `Pipeline started — fetching up to ~${approxTotal} headlines from last 48 hours. Polling every 5s...`
@@ -253,11 +268,12 @@ export default function Admin() {
           <h3 className="label-text mb-4">Run Pipeline</h3>
           <div className="space-y-4">
 
-            {/* Secret Key */}
+            {/* Admin Auth */}
             <div>
               <label className="text-xs text-muted-foreground mb-1.5 block">
-                Secret key
+                {adminToken ? '✓ Authenticated' : 'Admin Password'}
               </label>
+<<<<<<< HEAD
               <input
                 type="password"
                 value={secret}
@@ -271,6 +287,32 @@ export default function Admin() {
                 <code className="bg-accent px-1 rounded">PIPELINE_SECRET</code>
                 {" "}in your .env or Render environment variables
               </p>
+=======
+              {!adminToken ? (
+                <div className="space-y-2">
+                  <input
+                    type="password"
+                    value={secret}
+                    onChange={e => setSecret(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleLogin()}
+                    placeholder="Enter admin password"
+                    className="w-full px-4 py-2.5 rounded-xl bg-accent/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <button onClick={handleLogin} className="px-4 py-2 rounded-lg bg-primary/80 text-primary-foreground text-xs font-medium hover:bg-primary transition-colors">
+                    Login
+                  </button>
+                  {authError && <p className="text-xs text-bearish">{authError}</p>}
+                  <p className="text-[10px] text-muted-foreground">
+                    Set as <code className="bg-accent px-1 rounded">ADMIN_SECRET</code> in your .env file
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-bullish">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Admin session active
+                </div>
+              )}
+>>>>>>> fb496d6 (your changes)
             </div>
 
             {/* Headlines per feed */}

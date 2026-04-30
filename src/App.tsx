@@ -11,6 +11,8 @@ import GeopoliticalTracker from "./pages/GeopoliticalTracker";
 import AskAI from "./pages/AskAI";
 import AboutProject from "./pages/AboutProject";
 import Admin from "./pages/Admin";
+import AccuracyDashboard from "./pages/AccuracyDashboard";
+import StockSearch from "./pages/StockSearch";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/sectors"       element={<SectorWatchlist />}    />
             <Route path="/geopolitical"  element={<GeopoliticalTracker />}/>
             <Route path="/ask-ai"        element={<AskAI />}              />
+            <Route path="/accuracy"      element={<AccuracyDashboard />}  />
+            <Route path="/stocks"        element={<StockSearch />}        />
             <Route path="/about"         element={<AboutProject />}       />
             <Route path="/admin"         element={<Admin />}              />
             <Route path="*"              element={<NotFound />}           />
