@@ -310,7 +310,6 @@ export default function Admin() {
                   Admin session active
                 </div>
               )}
->>>>>>> fb496d6 (your changes)
             </div>
 
             {/* Headlines per feed */}
