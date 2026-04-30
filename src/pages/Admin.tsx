@@ -273,7 +273,6 @@ export default function Admin() {
               <label className="text-xs text-muted-foreground mb-1.5 block">
                 {adminToken ? '✓ Authenticated' : 'Admin Password'}
               </label>
-<<<<<<< HEAD
               <input
                 type="password"
                 value={secret}
@@ -287,7 +286,6 @@ export default function Admin() {
                 <code className="bg-accent px-1 rounded">PIPELINE_SECRET</code>
                 {" "}in your .env or Render environment variables
               </p>
-=======
               {!adminToken ? (
                 <div className="space-y-2">
                   <input
