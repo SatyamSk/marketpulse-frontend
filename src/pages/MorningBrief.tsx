@@ -17,18 +17,6 @@ import {
 type SortKey = "impact_score" | "sector" | "sentiment" | "z_score";
 
 const TT = {
-<<<<<<< HEAD
-  background: "rgba(10,10,10,0.95)",
-  border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: "8px", color: "#f8fafc",
-  fontSize: "11px", padding: "8px 12px",
-};
-
-const SECTOR_COLORS: Record<string, string> = {
-  Banking: "#22c55e", Energy: "#3b82f6", IT: "#f59e0b",
-  Fintech: "#818cf8", Manufacturing: "#f472b6", Healthcare: "#10b981",
-  FMCG: "#a78bfa", Startup: "#06b6d4", Retail: "#fb923c", Other: "#64748b",
-=======
   background: "rgba(11, 13, 17, 0.95)",
   backdropFilter: "blur(12px)",
   border: "1px solid rgba(99,102,241,0.15)",
@@ -37,7 +25,12 @@ const SECTOR_COLORS: Record<string, string> = {
   fontSize: "11px",
   boxShadow: "0 4px 16px rgba(0,0,0,0.6)",
   padding: "8px 12px"
->>>>>>> fb496d6 (your changes)
+};
+
+const SECTOR_COLORS: Record<string, string> = {
+  Banking: "#22c55e", Energy: "#3b82f6", IT: "#f59e0b",
+  Fintech: "#818cf8", Manufacturing: "#f472b6", Healthcare: "#10b981",
+  FMCG: "#a78bfa", Startup: "#06b6d4", Retail: "#fb923c", Other: "#64748b",
 };
 
 function ShockBadge({ status, zScore }: { status: string; zScore: number | null }) {
@@ -144,36 +137,21 @@ export default function MorningBrief() {
   });
 
   const isRiskOn = market_regime.regime === "Risk On";
-<<<<<<< HEAD
   const isPanic  = market_regime.regime === "Panic";
   const regimeColor = isRiskOn ? "text-emerald-400" : isPanic ? "text-rose-400" : "text-amber-400";
   const regimeBorder = isRiskOn ? "border-emerald-500/20 bg-emerald-500/5" : isPanic ? "border-rose-500/20 bg-rose-500/5" : "border-amber-500/20 bg-amber-500/5";
-=======
-  const isPanic = market_regime.regime === "Panic";
-  
-  const regimeColor = isRiskOn ? "text-bullish" : isPanic ? "text-bearish" : "text-warning";
-  const regimeGlow = isRiskOn ? "metric-glow-bullish" : 
-                     isPanic ? "metric-glow-bearish" : 
-                     "metric-glow-primary";
-  const regimeBg = isRiskOn ? "bg-gradient-to-br from-bullish/5 to-transparent" : 
-                   isPanic ? "bg-gradient-to-br from-bearish/5 to-transparent" : 
-                   "bg-gradient-to-br from-warning/5 to-transparent";
->>>>>>> fb496d6 (your changes)
 
   const totalShocks = (shock_counts?.major ?? 0) + (shock_counts?.shock ?? 0);
   const msiLevel = market_stress_index?.level ?? "Low";
   const msiValue = market_stress_index?.msi ?? 0;
 
-  // Sector priority: sort by normalized risk (removes Banking weight bias)
   const sectorsByRisk = [...benchmark].sort((a: any, b: any) => b.avg_weighted_risk - a.avg_weighted_risk);
 
-  // Opportunities: positive signal, good CSI, manageable risk
   const opportunities = [...benchmark]
     .filter((s: any) => s.composite_sentiment_index > 10 && s.avg_weighted_risk < 35)
     .sort((a: any, b: any) => b.composite_sentiment_index - a.composite_sentiment_index)
     .slice(0, 4);
 
-  // Risk alerts: high risk sectors
   const riskSectors = sectorsByRisk.filter((s: any) => s.avg_weighted_risk >= 20).slice(0, 5);
 
   const msiColors = {
@@ -188,18 +166,12 @@ export default function MorningBrief() {
     <DashboardLayout>
       <div className="w-full max-w-[1400px] mx-auto space-y-4 pb-8">
 
-<<<<<<< HEAD
-        {/* HEADER */}
-        <div className="relative overflow-hidden rounded-xl bg-[#080808] border border-white/5 fade-in">
-          <div className="absolute -top-1/2 -left-[5%] w-1/2 h-[150%] bg-primary/5 blur-[80px] rounded-full pointer-events-none" />
-=======
         {/* --- COMPACT HERO HEADER --- */}
         <div className="relative overflow-hidden rounded-xl bg-card border border-border shadow-lg fade-in">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
             <div className="absolute -top-[50%] -left-[5%] w-[50%] h-[150%] bg-primary/5 blur-[80px] rounded-full rotate-12"></div>
           </div>
 
->>>>>>> fb496d6 (your changes)
           <div className="relative z-10 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -211,17 +183,10 @@ export default function MorningBrief() {
                   <span className="text-[9px] font-bold tracking-widest text-primary uppercase">Live Intelligence</span>
                 </div>
                 <div className="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 flex items-center gap-1.5">
-<<<<<<< HEAD
                   <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Built by</span>
                   <span className="text-[10px] font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">Satyam</span>
                   <span className="w-0.5 h-0.5 rounded-full bg-border" />
                   <span className="text-[9px] text-foreground/60 uppercase tracking-wider">PGDM IMI Delhi</span>
-=======
-                  <span className="text-[9px] text-muted-foreground uppercase tracking-wider">Built By</span>
-                  <span className="text-[10px] font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-primary to-bullish">Satyam</span>
-                  <span className="w-0.5 h-0.5 rounded-full bg-border"></span>
-                  <span className="text-[9px] font-medium text-foreground/70 uppercase tracking-wider">PGDM IMI Delhi</span>
->>>>>>> fb496d6 (your changes)
                 </div>
               </div>
               <div className="flex items-baseline gap-3">
@@ -391,8 +356,8 @@ export default function MorningBrief() {
               </div>
               <div className="space-y-1.5">
                 {[
-                  { label: "Focus", value: market_regime.watch,            color: "text-primary"  },
-                  { label: "Avoid", value: market_regime.avoid,            color: "text-rose-400" },
+                  { label: "Focus", value: market_regime.watch,             color: "text-primary"  },
+                  { label: "Avoid", value: market_regime.avoid,             color: "text-rose-400" },
                   { label: "Nifty", value: market_regime.nifty_implication, color: "text-foreground" },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="flex gap-2 text-[11px]">
