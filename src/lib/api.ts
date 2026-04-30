@@ -36,8 +36,8 @@ export const api = {
   
   // Pipeline
   pipelineStatus:  ()                          => get<{ last_headlines_update: string | null; headlines_count: number; is_running: boolean; data_available: boolean }>("/api/pipeline/status"),
-  triggerPipeline: (secret: string, maxPerFeed: number, token: string, mode: string = "agent") =>
-    post<{ status: string; message: string; mode: string }>("/api/pipeline/run", { secret, max_per_feed: maxPerFeed, mode }, token),
+  triggerPipeline: (secret: string, maxPerFeed: number, token: string) =>
+    post<{ status: string; message: string; mode: string }>("/api/pipeline/run", { secret, max_per_feed: maxPerFeed }, token),
   
   // Brief
   briefStatus:     ()                          => get<{ allowed: boolean; used: number; remaining: number; limit: number }>("/api/brief/status"),
