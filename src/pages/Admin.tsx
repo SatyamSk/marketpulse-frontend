@@ -44,6 +44,7 @@ export default function Admin() {
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [adminToken, setAdminToken]       = useState<string | null>(null);
   const [authError, setAuthError]         = useState<string | null>(null);
+  const [pipelineMode, setPipelineMode]   = useState<"agent" | "legacy">("agent");
   const pollRef                           = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const approxTotal = maxPerFeed * FEEDS;
@@ -110,7 +111,7 @@ export default function Admin() {
     } catch {}
 
     try {
-      const result = await api.triggerPipeline(secret, maxPerFeed, adminToken);
+      const result = await api.triggerPipeline(secret, maxPerFeed, adminToken, pipelineMode);
       setMessage(
         result.message ??
         `Pipeline started — fetching up to ~${approxTotal} headlines from last 48 hours. Polling every 5s...`
@@ -380,6 +381,43 @@ export default function Admin() {
               </p>
             </div>
 
+            {/* Pipeline Mode */}
+            <div>
+              <label className="text-xs text-muted-foreground mb-2 block">Pipeline Mode</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setPipelineMode("agent")}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    pipelineMode === "agent"
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-border bg-accent/30 hover:bg-accent/50"
+                  }`}
+                >
+                  <p className={`text-xs font-semibold ${pipelineMode === "agent" ? "text-primary" : "text-foreground"}`}>
+                    🧠 Agent Mode
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Autonomous AI — fetches macro data, headlines, reasons holistically
+                  </p>
+                </button>
+                <button
+                  onClick={() => setPipelineMode("legacy")}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    pipelineMode === "legacy"
+                      ? "border-primary/40 bg-primary/10"
+                      : "border-border bg-accent/30 hover:bg-accent/50"
+                  }`}
+                >
+                  <p className={`text-xs font-semibold ${pipelineMode === "legacy" ? "text-primary" : "text-foreground"}`}>
+                    ⚙️ Legacy Mode
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Static pipeline — RSS + classification + formulas
+                  </p>
+                </button>
+              </div>
+            </div>
+
             {/* Run Button */}
             <button
               onClick={triggerPipeline}
@@ -389,12 +427,12 @@ export default function Admin() {
               {isActive ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Running — fetching ~{approxTotal} headlines...
+                  {pipelineMode === "agent" ? "Agent thinking..." : `Running — fetching ~${approxTotal} headlines...`}
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4" />
-                  Run Pipeline — fetch ~{approxTotal} headlines
+                  {pipelineMode === "agent" ? "Run Agent Intelligence" : `Run Legacy Pipeline — ~${approxTotal} headlines`}
                 </>
               )}
             </button>

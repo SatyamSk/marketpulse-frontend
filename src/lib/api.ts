@@ -36,8 +36,8 @@ export const api = {
   
   // Pipeline
   pipelineStatus:  ()                          => get<{ last_headlines_update: string | null; headlines_count: number; is_running: boolean; data_available: boolean }>("/api/pipeline/status"),
-  triggerPipeline: (secret: string, maxPerFeed: number, token: string) =>
-    post<{ status: string; message: string }>("/api/pipeline/run", { secret, max_per_feed: maxPerFeed }, token),
+  triggerPipeline: (secret: string, maxPerFeed: number, token: string, mode: string = "agent") =>
+    post<{ status: string; message: string; mode: string }>("/api/pipeline/run", { secret, max_per_feed: maxPerFeed, mode }, token),
   
   // Brief
   briefStatus:     ()                          => get<{ allowed: boolean; used: number; remaining: number; limit: number }>("/api/brief/status"),
@@ -53,6 +53,9 @@ export const api = {
   getHistory:      (sector?: string, days?: number) => 
     get<{ history: unknown[]; days: number; sector: string | null }>(`/api/history?${sector ? `sector=${sector}&` : ''}days=${days || 30}`),
   searchStocks:    (query: string)             => get<StockSearchResult>(`/api/stocks/search?q=${encodeURIComponent(query)}`),
+  
+  // Agent
+  getAgentResult:  ()                          => get<Record<string, unknown>>("/api/agent/result"),
   
   // Admin
   adminLogin:      (password: string)          => post<{ token: string }>("/api/admin/login", { password }),
