@@ -8,7 +8,7 @@ import { useDashboard } from "@/hooks/DashboardContext";
 import { useState } from "react";
 import type { SectorBenchmark } from "@/lib/types";
 
-const navItems = [
+const defaultNavItems = [
   { title: "Morning Brief",    url: "/",             icon: Newspaper     },
   { title: "Sentiment Lab",    url: "/sentiment-lab",icon: FlaskConical  },
   { title: "Sector Watchlist", url: "/sectors",      icon: BarChart3     },
@@ -17,13 +17,18 @@ const navItems = [
   { title: "Accuracy",         url: "/accuracy",     icon: Target        },
   { title: "Stock Search",     url: "/stocks",       icon: Search        },
   { title: "About",            url: "/about",        icon: Info          },
-  { title: "Pipeline",         url: "/admin",        icon: Settings      },
 ];
 
 export function AppSidebar() {
   const { data, isStale } = useDashboard();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+
+  const isAdmin = typeof window !== "undefined" && Boolean(localStorage.getItem("marketpulseAdminToken"));
+  const navItems = [
+    ...defaultNavItems,
+    ...(isAdmin ? [{ title: "Pipeline", url: "/admin", icon: Settings }] : []),
+  ];
 
   const highRisk   = (data?.benchmark?.filter((s: SectorBenchmark) => s.risk_level === "HIGH") ?? []) as SectorBenchmark[];
   const avgNss     = data?.summary_stats?.avg_nss ?? 0;

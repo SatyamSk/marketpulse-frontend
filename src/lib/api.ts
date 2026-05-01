@@ -2,11 +2,15 @@ import type { DashboardData, AccuracyData, StockSearchResult } from './types';
 
 const BASE = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/+$/, "");
 
-async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+async function get<T>(path: string, token?: string): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE}${path}`, { headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: `API error ${res.status}` }));
-    throw new Error(err.detail || `API error ${res.status} on ${path}`);
+    const detail = typeof err.detail === "object" ? JSON.stringify(err.detail) : err.detail;
+    throw new Error(detail || `API error ${res.status} on ${path}`);
   }
   return await res.json();
 }
@@ -22,7 +26,8 @@ async function post<T>(path: string, body: unknown, token?: string): Promise<T> 
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    const e = new Error(err.detail || err.message || `API error ${res.status}`) as Error & { response?: { data: unknown } };
+    const detail = typeof err.detail === "object" ? JSON.stringify(err.detail) : err.detail;
+    const e = new Error(detail || err.message || `API error ${res.status}`) as Error & { response?: { data: unknown } };
     e.response = { data: err };
     throw e;
   }
@@ -59,6 +64,5 @@ export const api = {
   
   // Admin
   adminLogin:      (password: string)          => post<{ token: string }>("/api/admin/login", { password }),
-  adminLogs:       (token: string)             => get<{ logs: string }>("/api/admin/logs"),
-  adminBacktest:   (token: string)             => post<{ status: string }>("/api/admin/backtest", {}, token),
-};
+  adminLogs:       (token: string)             => get<{ logs: string }>("/api/admin/logs", token),
+  adminBacktest:   (token: string)             => post<{ status: string }>("/api/admin/backtest", {}, token),  adminReflect:    (token: string)             => post<{ status: string }>('/api/admin/reflect', {}, token),};

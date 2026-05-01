@@ -96,9 +96,14 @@ export default function MorningBrief() {
       setBriefUsed(result.used ?? briefUsed + 1);
       setBriefRemaining(result.remaining ?? Math.max(0, briefRemaining - 1));
     } catch (err: any) {
-      const detail = err?.response?.data?.detail;
-      if (detail?.error === "daily_limit_reached") setBriefRemaining(0);
-      else setBrief("Could not generate outlook — check API connection.");
+      const detailRaw = err?.response?.data?.detail ?? err?.response?.data?.message ?? err?.message;
+      const detail = typeof detailRaw === "object" ? JSON.stringify(detailRaw) : String(detailRaw || "");
+      if (detail?.includes("daily_limit_reached") || detail?.includes("Both daily brief generations used")) {
+        setBriefRemaining(0);
+        setBrief("Daily brief limit reached. Try again after midnight.");
+      } else {
+        setBrief(`Could not generate outlook — ${detail || "check API connection."}`);
+      }
     } finally {
       setBriefLoading(false);
     }
