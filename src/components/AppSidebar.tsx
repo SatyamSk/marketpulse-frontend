@@ -27,7 +27,7 @@ export function AppSidebar() {
   const isAdmin = typeof window !== "undefined" && Boolean(localStorage.getItem("marketpulseAdminToken"));
   const navItems = [
     ...defaultNavItems,
-    ...(isAdmin ? [{ title: "Pipeline", url: "/admin", icon: Settings }] : []),
+    { title: isAdmin ? "Pipeline" : "Pipeline 🔒", url: "/admin", icon: Settings },
   ];
 
   const highRisk   = (data?.benchmark?.filter((s: SectorBenchmark) => s.risk_level === "HIGH") ?? []) as SectorBenchmark[];

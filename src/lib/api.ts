@@ -34,6 +34,13 @@ async function post<T>(path: string, body: unknown, token?: string): Promise<T> 
   return await res.json();
 }
 
+export interface ModelInfo {
+  id: string;
+  name: string;
+  description: string;
+  default: boolean;
+}
+
 export const api = {
   // Core
   getDashboard:    ()                          => get<DashboardData>("/api/dashboard"),
@@ -41,8 +48,8 @@ export const api = {
   
   // Pipeline
   pipelineStatus:  ()                          => get<{ last_headlines_update: string | null; headlines_count: number; is_running: boolean; data_available: boolean }>("/api/pipeline/status"),
-  triggerPipeline: (secret: string, maxPerFeed: number, token: string) =>
-    post<{ status: string; message: string; mode: string }>("/api/pipeline/run", { secret, max_per_feed: maxPerFeed }, token),
+  triggerPipeline: (secret: string, maxPerFeed: number, token: string, model?: string) =>
+    post<{ status: string; message: string; mode: string; model?: string }>("/api/pipeline/run", { secret, max_per_feed: maxPerFeed, model: model || "gpt-4o-mini" }, token),
   
   // Brief
   briefStatus:     ()                          => get<{ allowed: boolean; used: number; remaining: number; limit: number }>("/api/brief/status"),
@@ -53,16 +60,29 @@ export const api = {
   chat: (payload: { message: string; history: unknown[]; context_headlines: unknown[]; context_sectors: unknown[] }) =>
     post<{ answer: string }>("/api/chat", payload),
   
-  // New: Accuracy & History
+  // Accuracy & History
   getAccuracy:     ()                          => get<AccuracyData>("/api/accuracy"),
   getHistory:      (sector?: string, days?: number) => 
     get<{ history: unknown[]; days: number; sector: string | null }>(`/api/history?${sector ? `sector=${sector}&` : ''}days=${days || 30}`),
   searchStocks:    (query: string)             => get<StockSearchResult>(`/api/stocks/search?q=${encodeURIComponent(query)}`),
   
+  // Sector Detail
+  getSector:       (sector: string)            => get<{ sector: string; metrics: Record<string, unknown> }>(`/api/sectors/${encodeURIComponent(sector)}`),
+
   // Agent
   getAgentResult:  ()                          => get<Record<string, unknown>>("/api/agent/result"),
   
+  // Models
+  getModels:       ()                          => get<{ models: ModelInfo[] }>("/api/models"),
+
   // Admin
   adminLogin:      (password: string)          => post<{ token: string }>("/api/admin/login", { password }),
   adminLogs:       (token: string)             => get<{ logs: string }>("/api/admin/logs", token),
-  adminBacktest:   (token: string)             => post<{ status: string }>("/api/admin/backtest", {}, token),  adminReflect:    (token: string)             => post<{ status: string }>('/api/admin/reflect', {}, token),};
+  adminBacktest:   (token: string)             => post<{ status: string }>("/api/admin/backtest", {}, token),
+  adminReflect:    (token: string)             => post<{ status: string }>('/api/admin/reflect', {}, token),
+};
+
+/** SSE stream URL for agent thinking logs */
+export function getStreamUrl() {
+  return `${BASE}/api/pipeline/stream`;
+}

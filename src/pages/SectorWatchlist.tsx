@@ -130,7 +130,8 @@ export default function SectorWatchlist() {
     </DashboardLayout>
   );
 
-  const { benchmark, velocity_trend, correlation_matrix } = data;
+  const { benchmark, velocity_trend } = data;
+  const correlation_matrix = (data as any).correlation_matrix;
 
   const scatterData = benchmark.map((s: any) => ({
     x:              s.avg_impact,
@@ -460,7 +461,7 @@ export default function SectorWatchlist() {
                 </tr>
               </thead>
               <tbody>
-                {[...benchmark].sort((a: any, b: any) => b.benchmark_index - a.benchmark_index).map((s: any, i: number) => (
+                {[...benchmark].sort((a: any, b: any) => b.avg_weighted_risk - a.avg_weighted_risk).map((s: any, i: number) => (
                   <tr key={i} className="border-b border-border/30 hover:bg-accent/15 transition-colors">
                     <td className="px-3 py-2.5 font-medium text-foreground text-sm">
                       {s.sector}

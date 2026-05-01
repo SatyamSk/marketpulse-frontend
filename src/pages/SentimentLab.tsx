@@ -63,12 +63,16 @@ export default function SentimentLab() {
     if (!sector || !data) return;
     setDetailLoading(true);
     api.getSector(sector)
-      .then((r: any) => {
+      .then((r) => {
         if (r?.metrics) setSectorDetail(r.metrics);
       })
-      .catch(() => {})
+      .catch(() => {
+        // Fallback: use benchmark data from context
+        const fallback = data.benchmark.find((s: any) => s.sector === sector);
+        if (fallback) setSectorDetail(fallback);
+      })
       .finally(() => setDetailLoading(false));
-  }, [sector]);
+  }, [sector, data]);
 
   if (loading) return (
     <DashboardLayout>

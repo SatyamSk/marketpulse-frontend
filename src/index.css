@@ -27,10 +27,12 @@
     --secondary-foreground: 216 20% 93%;
     
     --muted: 222 14% 12%;
-    --muted-foreground: 225 14% 58%; /* #8B93A7 Muted lavender-gray */
+    --muted-foreground: 225 14% 63%; /* Bumped from 58% to 63% for better readability */
     
-    --accent: 239 84% 67%;
-    --accent-foreground: 0 0% 100%;
+    /* FIXED: accent must be a muted surface color, NOT same as primary.
+       Using primary here made all bg-accent/50 inputs unreadable vivid purple. */
+    --accent: 222 14% 14%;           /* Muted dark surface for inputs/backgrounds */
+    --accent-foreground: 216 20% 93%;
     
     /* Coral Rose — Danger without anxiety */
     --destructive: 350 89% 60%;      /* #F43F5E */
@@ -48,8 +50,8 @@
     /* Vivid Orange — Shock/Critical urgency */
     --shock: 25 95% 53%;             /* #F97316 */
     
-    --border: 222 14% 12%;           /* #1E2028 */
-    --input: 222 14% 12%;
+    --border: 222 14% 14%;           /* Slightly brighter for visibility */
+    --input: 222 14% 14%;
     --ring: 239 84% 67%;
     --radius: 0.875rem;
     
@@ -58,8 +60,8 @@
     --sidebar-border: 222 14% 10%;
     --sidebar-primary: 239 84% 67%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 239 84% 67%;
-    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-accent: 222 14% 14%;
+    --sidebar-accent-foreground: 216 20% 93%;
     --sidebar-ring: 239 84% 67%;
 
     /* Chart palette — Harmonious, distinguishable */
@@ -175,6 +177,30 @@
   .fade-in-delay-2 { animation-delay: 0.16s; }
   .fade-in-delay-3 { animation-delay: 0.24s; }
   .fade-in-delay-4 { animation-delay: 0.32s; }
+
+  /* ── Agent Thinking Log ── */
+  .agent-log-container {
+    background: linear-gradient(180deg, rgba(8,10,14,0.98) 0%, rgba(11,13,17,0.95) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    border-radius: 0.75rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  .agent-log-line {
+    padding: 2px 0;
+    font-size: 11px;
+    line-height: 1.6;
+    color: hsl(216 20% 80%);
+  }
+  .agent-log-line.tool-call { color: #818cf8; }
+  .agent-log-line.success  { color: #10b981; }
+  .agent-log-line.error    { color: #f43f5e; }
+  .agent-log-line.thinking { color: #f59e0b; }
+
+  /* ── Mobile Responsive Overrides ── */
+  @media (max-width: 768px) {
+    .glass-card { border-radius: 0.75rem; }
+    .label-text { font-size: 0.6rem; }
+  }
 }
 
 @keyframes subtleFadeIn {

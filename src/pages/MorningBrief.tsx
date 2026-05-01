@@ -102,7 +102,7 @@ export default function MorningBrief() {
         setBriefRemaining(0);
         setBrief("Daily brief limit reached. Try again after midnight.");
       } else {
-        setBrief(`Could not generate outlook — ${detail || "check API connection."}`);
+        setBrief(`Could not generate outlook — ${detail || "ensure the backend is running and OPENAI_API_KEY is set."}`);
       }
     } finally {
       setBriefLoading(false);
