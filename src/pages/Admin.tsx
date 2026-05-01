@@ -551,6 +551,7 @@ export default function Admin() {
             )}
           </div>
         </div>
+        </>)}
 
         {adminToken && (
           <div className="glass-card p-5 fade-in">
