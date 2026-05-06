@@ -15,6 +15,11 @@ interface StockItem {
   pct_change: number;
   sector?: string;
   reason?: string;
+  signal?: string;
+  signal_label?: string;
+  signal_reason?: string;
+  conviction?: string;
+  score?: number;
 }
 
 interface StocksData {
@@ -124,34 +129,44 @@ function formatPrice(n: number): string {
   return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function StockRow({ stock, compact }: { stock: StockItem; compact?: boolean }) {
+function SignalBadge({ signal, conviction }: { signal?: string; conviction?: string }) {
+  if (!signal) return null;
+  const colors: Record<string, string> = {
+    BUY: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    LONG: "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
+    HOLD: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    SHORT: "bg-rose-500/10 text-rose-300 border-rose-500/20",
+    SELL: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+  };
+  const c = colors[signal] || colors.HOLD;
+  return (
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${c} uppercase tracking-wide`}>
+      {signal}
+      {conviction === "high" && " ●●●"}
+      {conviction === "medium" && " ●●"}
+      {conviction === "low" && " ●"}
+    </span>
+  );
+}
+
+function StockRow({ stock }: { stock: StockItem }) {
   const isUp = stock.change >= 0;
   const changeColor = isUp ? "text-emerald-400" : "text-rose-400";
   const arrow = isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />;
-
-  if (compact) {
-    return (
-      <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
-        <span className="text-xs font-bold text-foreground/90 w-20 shrink-0">{stock.symbol}</span>
-        <span className="text-xs text-muted-foreground flex-1 truncate">{stock.name}</span>
-        <span className="text-xs font-mono font-semibold text-foreground/80">{formatPrice(stock.price)}</span>
-        <span className={`flex items-center gap-1 text-xs font-semibold ${changeColor} w-16 justify-end`}>
-          {arrow}
-          {stock.pct_change >= 0 ? "+" : ""}{stock.pct_change}%
-        </span>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-all group">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-foreground">{stock.symbol}</span>
+          <SignalBadge signal={stock.signal} conviction={stock.conviction} />
           {stock.sector && <span className="text-[10px] text-muted-foreground/60 bg-white/5 px-1.5 py-0.5 rounded">{stock.sector}</span>}
         </div>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{stock.name}</p>
-        {stock.reason && <p className="text-[10px] text-primary/60 mt-0.5">{stock.reason}</p>}
+        {stock.signal_reason && stock.signal_reason !== "No strong signals" && (
+          <p className="text-[10px] text-primary/50 mt-0.5 truncate">{stock.signal_reason}</p>
+        )}
+        {stock.reason && <p className="text-[10px] text-muted-foreground/40 mt-0.5">{stock.reason}</p>}
       </div>
       <div className="text-right">
         <p className="text-sm font-mono font-semibold text-foreground">{formatPrice(stock.price)}</p>
