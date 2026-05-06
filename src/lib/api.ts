@@ -54,6 +54,11 @@ export const api = {
   getAnalysisCausal: ()                        => get<Record<string, unknown>>("/api/analysis/causal"),
   getAnalysisRegime: ()                        => get<Record<string, unknown>>("/api/analysis/regime"),
 
+  // Live Stocks (Indian Stock Market API)
+  getStocksLive:     (symbols?: string)        => get<Record<string, unknown>>(symbols ? `/api/stocks/live?symbols=${symbols}` : "/api/stocks/live"),
+  searchStocksLive:  (q: string)               => get<Record<string, unknown>>(`/api/stocks/search-live?q=${encodeURIComponent(q)}`),
+  getSectorStocks:   (sector: string)          => get<Record<string, unknown>>(`/api/stocks/sectors?sector=${encodeURIComponent(sector)}`),
+
   // Pipeline
   pipelineStatus:  ()                          => get<{ last_headlines_update: string | null; headlines_count: number; is_running: boolean; data_available: boolean }>("/api/pipeline/status"),
   triggerPipeline: (secret: string, maxPerFeed: number, token: string, model?: string) =>

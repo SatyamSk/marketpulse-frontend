@@ -1,11 +1,27 @@
 import { useState, useEffect } from "react";
 import {
-  AlertTriangle, ArrowRight, ChevronRight, Clock,
+  AlertTriangle, ArrowRight, BarChart3, ChevronRight, Clock,
   Eye, EyeOff, RefreshCw, Shield, TrendingDown, TrendingUp, Zap
 } from "lucide-react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { AgentThinkingSheet } from "@/components/AgentThinkingSheet";
 import { api } from "@/lib/api";
+
+interface StockItem {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  pct_change: number;
+  sector?: string;
+  reason?: string;
+}
+
+interface StocksData {
+  bellwethers: StockItem[];
+  mentioned: StockItem[];
+  sector_picks: StockItem[];
+}
 
 interface TodayData {
   mood: string;
@@ -19,6 +35,7 @@ interface TodayData {
   invalidation: string;
   signal_quality: string;
   last_updated: string | null;
+  stocks?: StocksData;
 }
 
 function ConfidenceRing({ value, size = 64 }: { value: number; size?: number }) {
@@ -97,6 +114,74 @@ function DriverCard({ driver }: { driver: TodayData["drivers"][0] }) {
       <div className="flex items-start gap-2.5">
         <span className="text-lg leading-none shrink-0">{driver.icon}</span>
         <p className="text-sm text-foreground/80 leading-relaxed">{driver.headline}</p>
+      </div>
+    </div>
+  );
+}
+
+function formatPrice(n: number): string {
+  if (!n) return "—";
+  return "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function StockRow({ stock, compact }: { stock: StockItem; compact?: boolean }) {
+  const isUp = stock.change >= 0;
+  const changeColor = isUp ? "text-emerald-400" : "text-rose-400";
+  const arrow = isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />;
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+        <span className="text-xs font-bold text-foreground/90 w-20 shrink-0">{stock.symbol}</span>
+        <span className="text-xs text-muted-foreground flex-1 truncate">{stock.name}</span>
+        <span className="text-xs font-mono font-semibold text-foreground/80">{formatPrice(stock.price)}</span>
+        <span className={`flex items-center gap-1 text-xs font-semibold ${changeColor} w-16 justify-end`}>
+          {arrow}
+          {stock.pct_change >= 0 ? "+" : ""}{stock.pct_change}%
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4 px-4 py-3 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.06] transition-all group">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-foreground">{stock.symbol}</span>
+          {stock.sector && <span className="text-[10px] text-muted-foreground/60 bg-white/5 px-1.5 py-0.5 rounded">{stock.sector}</span>}
+        </div>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">{stock.name}</p>
+        {stock.reason && <p className="text-[10px] text-primary/60 mt-0.5">{stock.reason}</p>}
+      </div>
+      <div className="text-right">
+        <p className="text-sm font-mono font-semibold text-foreground">{formatPrice(stock.price)}</p>
+        <p className={`text-xs font-semibold flex items-center gap-1 justify-end ${changeColor}`}>
+          {arrow}
+          {isUp ? "+" : ""}{stock.change.toFixed(2)} ({stock.pct_change >= 0 ? "+" : ""}{stock.pct_change}%)
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function BellwetherStrip({ stocks }: { stocks: StockItem[] }) {
+  if (!stocks.length) return null;
+  return (
+    <div className="glass-card p-3 fade-in overflow-x-auto">
+      <div className="flex items-center gap-4 min-w-max">
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">Live</span>
+        {stocks.map(s => {
+          const isUp = s.change >= 0;
+          return (
+            <div key={s.symbol} className="flex items-center gap-2 px-2">
+              <span className="text-xs font-bold text-foreground/90">{s.symbol}</span>
+              <span className="text-xs font-mono text-foreground/70">{formatPrice(s.price)}</span>
+              <span className={`text-[11px] font-semibold ${isUp ? "text-emerald-400" : "text-rose-400"}`}>
+                {isUp ? "▲" : "▼"} {Math.abs(s.pct_change)}%
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -287,6 +372,39 @@ export default function Today() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* ── LIVE STOCK PRICES ── */}
+            {data.stocks && (data.stocks.bellwethers?.length > 0 || data.stocks.mentioned?.length > 0) && (
+              <div className="space-y-4 fade-in fade-in-delay-2">
+                {/* Bellwether strip */}
+                <BellwetherStrip stocks={data.stocks.bellwethers || []} />
+
+                {/* Stocks mentioned in today's headlines */}
+                {data.stocks.mentioned && data.stocks.mentioned.length > 0 && (
+                  <div className="space-y-2">
+                    <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-primary" /> In Today's Headlines
+                      <span className="text-[10px] text-muted-foreground font-normal ml-1">stocks mentioned in the news</span>
+                    </h2>
+                    <div className="space-y-1.5">
+                      {data.stocks.mentioned.map(s => <StockRow key={s.symbol} stock={s} />)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sector picks */}
+                {data.stocks.sector_picks && data.stocks.sector_picks.length > 0 && (
+                  <div className="space-y-2">
+                    <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-emerald-400" /> Top Sector Movers
+                    </h2>
+                    <div className="space-y-1.5">
+                      {data.stocks.sector_picks.map(s => <StockRow key={s.symbol} stock={s} />)}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
