@@ -4,15 +4,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DashboardProvider } from "@/hooks/DashboardContext";
-import MorningBrief from "./pages/MorningBrief";
-import SentimentLab from "./pages/SentimentLab";
-import SectorWatchlist from "./pages/SectorWatchlist";
-import GeopoliticalTracker from "./pages/GeopoliticalTracker";
+import Today from "./pages/Today";
+import FullAnalysis from "./pages/FullAnalysis";
 import AskAI from "./pages/AskAI";
-import AboutProject from "./pages/AboutProject";
 import Admin from "./pages/Admin";
-import AccuracyDashboard from "./pages/AccuracyDashboard";
-import StockSearch from "./pages/StockSearch";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,16 +20,11 @@ const App = () => (
       <DashboardProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/"              element={<MorningBrief />}       />
-            <Route path="/sentiment-lab" element={<SentimentLab />}       />
-            <Route path="/sectors"       element={<SectorWatchlist />}    />
-            <Route path="/geopolitical"  element={<GeopoliticalTracker />}/>
-            <Route path="/ask-ai"        element={<AskAI />}              />
-            <Route path="/accuracy"      element={<AccuracyDashboard />}  />
-            <Route path="/stocks"        element={<StockSearch />}        />
-            <Route path="/about"         element={<AboutProject />}       />
-            <Route path="/admin"         element={<Admin />}              />
-            <Route path="*"              element={<NotFound />}           />
+            <Route path="/"              element={<Today />}         />
+            <Route path="/analysis"      element={<FullAnalysis />}  />
+            <Route path="/chat"          element={<AskAI />}         />
+            <Route path="/admin"         element={<Admin />}         />
+            <Route path="*"              element={<NotFound />}      />
           </Routes>
         </BrowserRouter>
       </DashboardProvider>

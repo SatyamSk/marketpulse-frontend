@@ -223,3 +223,83 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.15); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.3); }
+
+/* ── CausalEdge: Mood Indicator ── */
+.mood-pulse {
+  animation: moodPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.mood-green { --mood-color: #22c55e; }
+.mood-amber { --mood-color: #f59e0b; }
+.mood-red   { --mood-color: #ef4444; }
+
+.mood-glow {
+  box-shadow: 0 0 40px var(--mood-color, #22c55e), 0 0 80px color-mix(in srgb, var(--mood-color, #22c55e) 30%, transparent);
+}
+
+@keyframes moodPulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+
+/* ── CausalEdge: Causal Chain Arrow ── */
+.causal-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.8125rem;
+  transition: all 0.2s;
+}
+.causal-arrow:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(99,102,241,0.2);
+}
+.causal-arrow-connector {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.75rem;
+  margin: 0 0.125rem;
+}
+
+/* ── CausalEdge: Sector Health Bar ── */
+.sector-bar-track {
+  height: 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.sector-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── CausalEdge: Confidence Ring ── */
+.confidence-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.confidence-ring svg {
+  transform: rotate(-90deg);
+}
+
+/* ── CausalEdge: Driver Card ── */
+.driver-card {
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+}
+.driver-card:hover {
+  background: rgba(255,255,255,0.04);
+}
+.driver-card.positive { border-left: 3px solid #22c55e; }
+.driver-card.negative { border-left: 3px solid #ef4444; }
+.driver-card.warning  { border-left: 3px solid #f59e0b; }
+.driver-card.hidden   { border-left: 3px solid #818cf8; }
+

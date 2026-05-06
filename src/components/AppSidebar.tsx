@@ -1,42 +1,25 @@
 import {
-  Newspaper, FlaskConical, BarChart3, Globe,
-  MessageSquare, Info, Settings, AlertTriangle,
-  CheckCircle, Shield, Menu, X, Target, Search
+  Zap, FlaskConical, MessageSquare, Settings,
+  Shield, Menu, X
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useDashboard } from "@/hooks/DashboardContext";
 import { useState } from "react";
-import type { SectorBenchmark } from "@/lib/types";
 
-const defaultNavItems = [
-  { title: "Morning Brief",    url: "/",             icon: Newspaper     },
-  { title: "Sentiment Lab",    url: "/sentiment-lab",icon: FlaskConical  },
-  { title: "Sector Watchlist", url: "/sectors",      icon: BarChart3     },
-  { title: "Geopolitical",     url: "/geopolitical", icon: Globe         },
-  { title: "Ask AI",           url: "/ask-ai",       icon: MessageSquare },
-  { title: "Accuracy",         url: "/accuracy",     icon: Target        },
-  { title: "Stock Search",     url: "/stocks",       icon: Search        },
-  { title: "About",            url: "/about",        icon: Info          },
+const navItems = [
+  { title: "Today",          url: "/",          icon: Zap           },
+  { title: "Full Analysis",  url: "/analysis",  icon: FlaskConical  },
+  { title: "Ask AI",         url: "/chat",      icon: MessageSquare },
 ];
 
 export function AppSidebar() {
-  const { data, isStale } = useDashboard();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const isAdmin = typeof window !== "undefined" && Boolean(localStorage.getItem("marketpulseAdminToken"));
-  const navItems = [
-    ...defaultNavItems,
+  const allItems = [
+    ...navItems,
     { title: isAdmin ? "Pipeline" : "Pipeline 🔒", url: "/admin", icon: Settings },
   ];
-
-  const highRisk   = (data?.benchmark?.filter((s: SectorBenchmark) => s.risk_level === "HIGH") ?? []) as SectorBenchmark[];
-  const avgNss     = data?.summary_stats?.avg_nss ?? 0;
-  const isNegative = avgNss < 0;
-  const regime     = data?.market_regime?.regime ?? "Loading...";
-  const accuracy   = data?.model_accuracy?.accuracy ?? null;
-
-  const regimeClass = regime === "Risk On" ? "regime-risk-on" : regime === "Panic" ? "regime-panic" : regime === "Complacent" ? "regime-complacent" : "regime-risk-off";
 
   const SidebarContent = () => (
     <aside className="w-64 min-h-screen flex flex-col border-r border-border bg-background">
@@ -44,53 +27,32 @@ export function AppSidebar() {
       <div className="p-5 border-b border-border flex items-center justify-between">
         <div>
           <h1 className="text-base font-semibold text-foreground tracking-tight">
-            MarketPulse AI
+            CausalEdge AI
           </h1>
-          <p className="label-text mt-0.5">Intraday Intelligence</p>
+          <p className="label-text mt-0.5">Market Intelligence</p>
         </div>
         <button onClick={() => setMobileOpen(false)} className="lg:hidden text-muted-foreground hover:text-foreground">
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Live Mood + Accuracy */}
-      <div className="px-4 py-3 border-b border-border space-y-2">
-        {data ? (
-          <div className="space-y-2">
-            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${regimeClass}`}>
-              <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isNegative ? "bg-bearish" : "bg-bullish"}`} />
-              {regime} · NSS {avgNss > 0 ? "+" : ""}{avgNss.toFixed(1)}
-            </div>
-            <p className="text-[10px] text-muted-foreground pl-1">
-              {data.summary_stats?.total_headlines ?? 0} headlines ·{" "}
-              {data.summary_stats?.geopolitical_flags ?? 0} geo flags ·{" "}
-              {data.shock_counts?.major ?? 0} major shocks
-            </p>
-            {accuracy !== null && (
-              <div className="flex items-center gap-2 pl-1">
-                <Target className="w-3 h-3 text-primary" />
-                <span className={`text-[10px] font-semibold ${accuracy >= 65 ? "text-bullish" : accuracy >= 50 ? "text-primary" : "text-bearish"}`}>
-                  {accuracy}% accuracy (30d)
-                </span>
-              </div>
-            )}
-            {isStale && (
-              <p className="text-[10px] text-warning pl-1 font-medium">
-                ⚠ Data may be stale — pipeline ran &gt;6h ago
-              </p>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-xs text-muted-foreground">
-            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-pulse" />
-            Connecting...
-          </div>
-        )}
+      {/* Agent Badge */}
+      <div className="px-4 py-3 border-b border-border">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary" />
+          </span>
+          9-Agent Intelligence
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2 px-1 leading-relaxed">
+          Causal reasoning · Supply chain analysis · Behavioral detection · Contradiction checking
+        </p>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-3 space-y-0.5">
-        {navItems.map((item) => (
+        {allItems.map((item) => (
           <NavLink
             key={item.url}
             to={item.url}
@@ -105,30 +67,6 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      {/* Risk Alert */}
-      <div className="p-3">
-        {highRisk.length > 0 ? (
-          <div className="p-3 rounded-xl bg-bearish/8 border border-bearish/20">
-            <div className="flex items-center gap-2 text-bearish text-[10px] font-semibold uppercase tracking-wider mb-2">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              High Risk Alert
-            </div>
-            {highRisk.slice(0, 3).map((s: SectorBenchmark) => (
-              <p key={s.sector} className="text-[11px] text-bearish/80 leading-relaxed">
-                {s.sector} — {Number(s.avg_weighted_risk).toFixed(1)}
-              </p>
-            ))}
-          </div>
-        ) : data ? (
-          <div className="p-3 rounded-xl bg-bullish/8 border border-bullish/20">
-            <div className="flex items-center gap-2 text-bullish text-[10px] font-semibold">
-              <CheckCircle className="w-3.5 h-3.5" />
-              No high risk sectors
-            </div>
-          </div>
-        ) : null}
-      </div>
-
       {/* Disclaimer */}
       <button
         onClick={() => setShowDisclaimer(true)}
@@ -138,15 +76,21 @@ export function AppSidebar() {
         Disclaimer
       </button>
 
+      {/* Credit */}
+      <div className="px-5 py-3 border-t border-border">
+        <p className="text-[10px] text-muted-foreground/60">
+          Built by <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 font-semibold">Satyam</span> · PGDM IMI Delhi
+        </p>
+      </div>
+
       {showDisclaimer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
           <div className="bg-card border border-border rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6">
             <h2 className="text-base font-semibold text-foreground mb-4">Disclaimer & Terms of Use</h2>
             <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-              <p>MarketPulse AI is an independent analytical platform. It is not a SEBI-registered investment advisor, research analyst, or financial services provider.</p>
+              <p>CausalEdge AI is an independent analytical platform. It is not a SEBI-registered investment advisor, research analyst, or financial services provider.</p>
               <p>Nothing on this platform — including sentiment scores, risk classifications, market regime indicators, AI-generated briefs, sector analysis, or geopolitical risk flags — constitutes financial advice, investment advice, or trading recommendations.</p>
-              <p>All trading decisions are made solely at the discretion and risk of the user. MarketPulse AI bears no responsibility for any financial losses arising from use of this platform.</p>
-              <p>All sentiment scores and risk metrics are probabilistic estimates derived from automated news analysis and may not reflect actual market conditions. Past sentiment patterns do not guarantee future market movements.</p>
+              <p>All trading decisions are made solely at the discretion and risk of the user. CausalEdge AI bears no responsibility for any financial losses arising from use of this platform.</p>
               <p className="italic text-xs">By using this platform, you acknowledge that you have read, understood, and agreed to these terms.</p>
             </div>
             <button

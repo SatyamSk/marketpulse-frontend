@@ -46,6 +46,14 @@ export const api = {
   getDashboard:    ()                          => get<DashboardData>("/api/dashboard"),
   health:          ()                          => get<{ status: string }>("/api/health"),
   
+  // CausalEdge: Today (plain-English intelligence)
+  getToday:        ()                          => get<Record<string, unknown>>("/api/today"),
+  
+  // CausalEdge: Full Analysis
+  getAnalysisAgents: ()                        => get<{ agents: Record<string, unknown>; timestamp: string }>("/api/analysis/agents"),
+  getAnalysisCausal: ()                        => get<Record<string, unknown>>("/api/analysis/causal"),
+  getAnalysisRegime: ()                        => get<Record<string, unknown>>("/api/analysis/regime"),
+
   // Pipeline
   pipelineStatus:  ()                          => get<{ last_headlines_update: string | null; headlines_count: number; is_running: boolean; data_available: boolean }>("/api/pipeline/status"),
   triggerPipeline: (secret: string, maxPerFeed: number, token: string, model?: string) =>
@@ -86,3 +94,4 @@ export const api = {
 export function getStreamUrl() {
   return `${BASE}/api/pipeline/stream`;
 }
+
