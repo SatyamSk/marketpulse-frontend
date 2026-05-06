@@ -111,7 +111,43 @@ export default function Today() {
     setLoading(true);
     setError(null);
     try {
-      const result = await api.getToday();
+      // Try the new /api/today endpoint first
+      let result: any;
+      try {
+        result = await api.getToday();
+      } catch {
+        // Fallback: old /api/agent/result endpoint — convert to Today format
+        const raw: any = await api.getAgentResult();
+        if (raw && (raw.today || raw.regime)) {
+          if (raw.today) {
+            result = raw.today;
+          } else {
+            // Convert legacy agent_result.json → Today format
+            const regime = raw.regime || "Risk Off";
+            const moodMap: Record<string, [string, string]> = {
+              "Risk On": ["cautiously positive", "green"],
+              "Risk Off": ["cautious", "amber"],
+              "Panic": ["fearful", "red"],
+              "Complacent": ["mixed", "amber"],
+            };
+            const [mood, mood_color] = moodMap[regime] || ["mixed", "amber"];
+            result = {
+              mood, mood_color,
+              confidence: raw.regime_confidence || 50,
+              narrative: raw.top_insight || "Pipeline ran but no narrative was generated.",
+              drivers: [],
+              sectors: [],
+              hidden_signals: [],
+              what_could_go_wrong: Array.isArray(raw.invalidations) ? raw.invalidations.slice(0, 3) : [],
+              invalidation: Array.isArray(raw.invalidations) && raw.invalidations[0] ? raw.invalidations[0] : "",
+              signal_quality: raw.data_quality || "medium",
+              last_updated: raw.timestamp || null,
+            };
+          }
+        } else {
+          throw new Error("No analysis data available");
+        }
+      }
       setData(result as TodayData);
     } catch (err: any) {
       setError(err?.message || "Failed to load intelligence");
